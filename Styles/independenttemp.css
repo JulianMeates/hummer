@@ -1,0 +1,677 @@
+body {font-family: 'nunito'; font-weight: 300; text-rendering: auto;
+    -webkit-font-smoothing: antialiased;}
+.wrap {width: 100%; max-width: 1400px; margin: 3px auto; }
+.wrap form input {font-size: 20px; padding: 5px 5px 3px 8px; border: 1px solid #cccccc;}
+.wrap, img, input {
+	-webkit-transition: opacity 0.5s ease;
+	-moz-transition: all 0.5s ease;
+	-ms-transition: all 0.5s ease;
+	-o-transition: all 0.5s ease;
+	transition: all 0.5s ease;
+}
+input {
+    -webkit-border-radius:0; 
+    border-radius:0;
+}
+
+input {
+    -webkit-appearance: none;
+}
+
+h3 {font-size: 20px; margin-bottom: 20px; font-weight: 700; text-align: center;}
+h3 span {background: #fff; padding: 5px 12px; text-align: center; border-radius: 50%; margin: 0 20px 0 -20px;}
+
+.info-section.inactive form {display: none;}
+
+.Nothing {
+	background-image: url("../Images/SchickDrainage.jpg");
+}
+
+.ActionLogon {
+	width : 100%;
+	height : 100%;
+	
+	background-repeat: no-repeat, repeat;
+	background-position: center; /* Center the image */
+   	background-size: cover; /* Resize the background image to cover the entire container */
+   	
+   	max-width: 300px;
+}
+.ActionLogo {
+	display: block;
+  	margin-left: auto;
+  	margin-right: auto;
+  	width: 80%;
+  	max-width: 200px;
+
+}
+.ActionLogonTable {
+	display: block;
+  	margin-left: auto;
+  	margin-right: auto;
+  	width: 80%;
+  	max-width: 300px;
+
+}
+
+.ActionForm {
+	width : 100%;
+	height : 80%;
+}
+
+.ActionHeadingSection {
+	width : 100%; 
+	border: 1px solid #ccc;
+	display: inline-block;
+}
+
+.ActionBackButton {
+	float : left;
+	width : 8%;
+}
+.ActionHomeButton {
+	float : left;
+	width : 100%;
+	height : 100%;
+}
+.ActionHeading {
+	float : left;
+	text-align : left;
+	color :  #DE4A10;
+	width : 80%;
+	padding : 5px;
+	font-size : 130%;
+}
+
+.a_options {
+	height:387px;
+	width:24%;
+  	overflow:auto;
+  	border:0 solid green;
+  	position:fixed;
+	bottom : 20px;
+}
+
+.ActionMenu {
+	float : right;
+	vertical-align: top;
+	cursor: pointer;
+	width : 8%;
+	max-width : 35px;
+	
+}
+
+.ActionMenuBar1, .ActionMenuBar2, .ActionMenuBar3 {
+ 	width: 100%;
+  	height: 5px;
+  	background-color: #333;
+  	margin: 6px 0;
+  	transition: 0.4s;
+}
+
+.ActionMenuBarChange .ActionMenuBar1 {
+  	-webkit-transform: rotate(-45deg) translate(-9px, 6px);
+  	transform: rotate(-45deg) translate(-9px, 6px);
+}
+.ActionMenuBarChange .ActionMenuBar2 {opacity: 0;}
+
+.ActionMenuBarChange .ActionMenuBar3 {
+  	-webkit-transform: rotate(45deg) translate(-8px, -8px);
+  	transform: rotate(45deg) translate(-8px, -8px);
+}
+
+
+.ActionHeaderSticky {
+  position: fixed;
+  top: 0;
+  width: 100%
+}
+
+.ActionFilter {
+	width : 100%;
+	background-color:  #f2f2f2;
+}
+
+
+input[type=date] {
+  float: center;
+  padding-top: 0px;
+  border: none;
+  margin-top: 0px;
+  margin-right: 16px;
+  font-size: 150%;
+  width : 50%;
+  height : 15%;
+  min-height: 30px;
+}
+input[type=time] {
+  float: center;
+  padding-top: 0px;
+  border: none;
+  margin-top: 0px;
+  margin-right: 16px;
+  font-size: 150%;
+  width : 50%;
+   height : 15%;
+}
+
+input[type=text], select, textarea {
+  width: 100%;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  border: 1px solid #ccc;
+  border-radius: 0px;
+  resize: vertical;
+}
+
+input[type=password], select, textarea {
+  width: 100%;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  border: 1px solid #ccc;
+  border-radius: 0px;
+  resize: vertical;
+}
+
+input {
+    -webkit-border-radius:0; 
+    border-radius:0;
+}
+
+input {
+    -webkit-appearance: none;
+}
+
+input[type=submit]:active, input[type=submit]:focus {opacity: 0.1 !important; cursor: not-allowed !important;}
+
+.clear {clear: both;}
+
+
+::-webkit-input-placeholder {
+    color:    #dddddd; font-weight: 300;
+}
+:-moz-placeholder {
+    color:    #dddddd; font-weight: 300;
+}
+::-moz-placeholder {
+    color:    #dddddd; font-weight: 300;
+}
+:-ms-input-placeholder {
+    color:    #dddddd; font-weight: 300;
+}
+
+.ActionBigData {
+	width: 100%;
+	  height: 150px;
+	  box-sizing: border-box;
+	  border: 2px solid #ccc;
+	  border-radius: 0px;
+	  background-color: #f8f8f8;
+	  resize: true;
+	  font-size : 130%;
+	  max-width: 630px;
+}
+.ActionData {
+	
+	width: 100%;
+	font-size : 130%;
+	max-width: 630px;
+}
+
+
+/** select box css **/
+
+.ActionOptions {
+	display: inline-block;
+	width : 100%;
+	margin: auto auto auto 0;
+}
+
+.ActionFilter input[type=text] {
+  padding-top: 0px;
+  border: none;
+  margin-top: 8px;
+  margin-right: 16px;
+  font-size: 150%;
+  width : 80%;
+}
+
+
+
+
+.OptionFilter {
+	float : right;
+	display: inline-block;
+	width : 6%;
+
+}
+
+.Option {
+	padding: 0px 0px;
+	margin: 0px;
+	border: 1px solid #dddddd;
+	display: inline-block;
+	box-shadow: none;
+	background-color: transparent;
+	background-image: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	font-size: 13px;
+	background: #fff;
+	width : 95%;
+	min-height : 30px;
+	cursor: pointer;
+	padding-top: 0px ;
+	padding-bottom: 0px ;
+}
+
+.Option_Next {
+	padding: 0px 0px;
+	margin: 0px;
+    border: 1px solid #000000;
+   	float : center; 
+    box-shadow: none;
+    background-color: transparent;
+    background-image: none;
+    -webkit-appearance: none;
+       -moz-appearance: none;
+            appearance: none;
+			font-size: 15px;
+			 background: #999999;
+	
+	min-height : 30px;
+	cursor: pointer;
+	padding-top: 5px ;
+	padding-bottom: 5px ;	
+	font-size: 18px !important;
+    text-transform: uppercase;
+    padding: 10px 20px 8px 20px;
+   
+    font-weight: bold;
+    color : #FFFFFF;
+    -webkit-font-smoothing: antialiased;
+	text-align: center;
+	max-width: 640px;
+	margin: 30px auto 0;
+	width: 100%;
+	white-space: normal;
+}
+
+.Option_End {
+	border: 3px solid #000000;
+}
+.Option_Indent {
+	margin-left : 5%;
+}
+
+
+.Option_XBL, .Option_XBL_Blank {
+	background-color: #f2f2f2;
+	border: 0px;
+	font-size: 15px;
+	color: #DE4A10;
+	overflow: hidden;
+	padding-top: 5px ;
+	padding-bottom: 5px ;	
+	width : 95%;
+	vertical-align: middle;
+	text-align : left;
+	cursor: none;
+}
+.Option_XBL_Blank{
+	height:15px;
+}
+.Option_XBL_Indent {
+	padding-left : 10px;
+}
+.Option_Inactive {
+    background-color: #99CCFF;
+ }
+
+.OptionCell0 {
+	float : left;
+	font-size: 10px;
+	
+	width : 4%;
+	padding: 3px 5px;
+	text-align : left;
+	
+}
+
+.OptionCellIcon_DOWN {
+	background-image: url('../Images/Chevron.png');
+	background-repeat: no-repeat;
+	background-size: 15px 10px;
+	background-position: left bottom;
+	font-size: 10px;
+	display : table-cell;
+	width : 15px;
+	height : 10px;
+	
+	margin-left : 5px;
+	text-align : left;
+	cursor: alias;
+}
+
+
+.OptionCellIcon_UP {
+	background-image: url('../Images/ChevronUp.png');
+	background-repeat: no-repeat;
+	background-size: 10px 15px;
+	background-position: left bottom;
+	font-size: 10px;
+	display : table-cell;
+	width : 10px;
+	height : 15px;
+	margin-left : 5px;
+	text-align : left;
+	cursor: alias;
+}
+
+
+.OptionCellIcon {
+	width : 5%;
+	vertical-align : center;
+	margin : 0px;
+	float : left;
+}
+
+
+.OptionCellCode {
+	font-size: 12px;
+	float : left;
+	width : 14%;
+	padding: 3px 5px;
+	text-align : left;
+	
+}
+.OptionCellDesc {
+	font-size: 18px;
+	float : left;
+	padding: 3px 5px;
+	width : 50%;
+	text-align : left;
+
+}
+.OptionCellNum {
+	font-size: 14px;
+	float : right;
+	width : 16%;
+	text-align : right;
+	height : 100%;
+	margin-right : 3px;
+	
+}
+.OptionCellNum_Info {
+	font-size: 14px;
+	float : right;
+	background-color: #CCCCCC;
+	width : 16%;
+	text-align : right;
+	border-top-right-radius: 0px;
+	border-bottom-right-radius: 0px;
+	height : 100%;
+	padding : 0px;
+	margin-right : 3px;
+}
+
+
+
+
+/* The sidepanel menu */
+
+.Sidepanel {
+  height: 100%; /* Specify a height */
+  width: 100%; /* 0 width - change this with JavaScript */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Stay on top */
+  top: 0;
+  left: 0;
+  background-color: #999999; 
+  overflow-x: hidden; /* Disable horizontal scroll */
+  padding-top: 20px; /* Place content 60px from the top */
+  transition: 0.5s; /* 0.5 second transition effect to slide in the sidepanel */
+  max-width : 640px;
+}
+
+
+.SideOption {
+    padding: 8px 8px;
+	margin: 0;
+    border: 1px solid #008888;
+    box-shadow: none;
+    background-color: #002222;
+    background-image: none;
+    -webkit-appearance: none;
+       -moz-appearance: none;
+            appearance: none;
+			font-size: 15px;
+			 background: #fff;
+	width : 90%;
+	height : 10%;	
+	cursor: pointer;
+	padding-top: 5px ;
+	padding-bottom: 5px ;	
+	cursor: pointer;
+}
+
+.SideResult {
+    padding: 8px 8px;
+	margin: 10px;
+    border: 1px solid #008888;
+    box-shadow: none;
+    background-color: #002222;
+    background-image: none;
+    -webkit-appearance: none;
+       -moz-appearance: none;
+            appearance: none;
+			background: #fff;
+	width : 90%;
+	cursor: pointer;
+	padding-top: 5px ;
+	padding-bottom: 5px ;	
+	cursor: pointer;
+}
+
+
+
+.SideOption_Indent {
+	margin-left : 10px;
+}
+
+
+.SideOptionCell0 {
+	font-size: 10px;
+	width : 4%;
+	padding: 3px 5px;
+	text-align : left;
+	
+}
+
+	
+
+.Side_Home {
+	position : fixed;
+	top : 0px;
+	width : 100%; 
+	border: none;
+	display: inline-block;
+
+	background-color: #666666; 
+
+
+}
+
+.Side_HomeText {
+	position: absolute;
+  	top: 20px;
+	left : 10%;
+	text-align : center;
+	color :  #DE4A10;
+	font-size: 200%;
+	width : 80%;
+		
+}
+.Side_HomeButton {
+	float : left;
+	height : 80%;
+	padding : 5px;
+}
+
+.Side_Close {
+  position: absolute;
+  top: 0;
+  right: 15px;
+  font-size: 36px;
+  margin-left: 5px;
+}
+
+.SideOptionQuestion {
+	font-size: 15px;
+	font-style:  bold;
+	padding: 3px 5px;
+	margin-left:  : 10%;
+	text-align : left;
+	
+}
+.SideOptionAnswer {
+	font-size: 15px;
+	font-style:  italic;
+	padding: 3px 5px;
+	margin-left:  : 10%;
+	text-align : right;
+	
+}
+
+
+
+.SideOptionCell1 {
+	font-size: 15px;
+	padding: 3px 5px;
+	text-align : left;
+	
+}
+
+.SideOptionCell2 {
+	font-size: 15px;
+	padding: 3px 5px;
+	text-align : left;
+}
+
+
+
+/* The sidepanel links */
+.Sidepanel a {
+  padding: 8px 8px 8px 32px;
+  text-decoration: none;
+  font-size: 25px;
+  color: #818181;
+  display: block;
+  transition: 0.3s;
+}
+
+/* When you mouse over the navigation links, change their color */
+.Sidepanel a:hover {
+  color: #f1f1f1;
+}
+
+/* Position and style the close button (top right corner) */
+
+
+
+/*amendments*/
+
+#OPTIONS:after {content: ""; display: table; clear: both;}
+
+
+#camera, #camera--view, #camera--sensor, #camera--output{
+    position: fixed;
+    width: 93%;
+    object-fit: cover;
+    max-width:  635px;
+    
+}
+#camera--view, #camera--sensor, #camera--output{
+    transform: scaleX(-1);
+    filter: FlipH;
+}
+#camera--trigger{
+    width: 200px;
+    background-color: black;
+    color: white;
+    font-size: 16px;
+    border-radius: 30px;
+    border: none;
+    padding: 15px 20px;
+    text-align: center;
+    box-shadow: 0 5px 10px 0 rgba(0,0,0,0.2);
+    position: fixed;
+    bottom: 30px;
+    left: calc(50% - 100px);
+}
+.taken{
+    height: 100px!important;
+    width: 100px!important;
+    transition: all 0.5s ease-in;
+    border: solid 3px white;
+    box-shadow: 0 5px 10px 0 rgba(0,0,0,0.2);
+    top: 20px;
+    right: 20px;
+    z-index: 2;
+}
+
+
+
+.wrap form input.form-cta-buttonOption {
+    max-width: 60% !important; margin: 10px auto !important
+}
+
+.wrap form input.form-cta-button, #YESSTEP input, .wrap form input.form-cta-buttonOption {
+    display: block;
+    color: #fff;
+    background: #37bbfe;
+	font-size: 18px !important;
+    border: 1px solid #37bbfe;
+    text-transform: uppercase;
+    padding: 10px 20px 8px 20px;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 13px;
+    -webkit-font-smoothing: antialiased;
+	text-align: center;
+	max-width: 300px;
+	margin: 30px auto 0;
+	width: 100%;
+	cursor: pointer;
+	white-space: normal;
+}
+
+.wrap form input.form-cta-button:hover, #YESSTEP input:hover, .wrap form input.form-cta-buttonOption:hover {opacity: 0.7 !important;}
+
+#OPTIONS:after {content: ""; display: table; clear: both;}
+
+.yesbutton, .nobutton, .yesbutton_w, .nobutton_w {
+	display: inline-block;
+    color: #fff;
+    background: #37bbfe;
+	font-size: 18px !important;
+    border: 1px solid #37bbfe;
+    text-transform: uppercase;
+    padding: 10px 20px 8px 20px !important;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 13px;
+    -webkit-font-smoothing: antialiased;
+	text-align: center;
+	max-width: 300px;
+	margin: 10px auto 0;
+	width: 20%;
+	cursor: pointer;
+}
+
+.wrap form input.form-cta-buttonOption.yesbutton, .wrap form input.form-cta-buttonOption.nobutton {max-width: 220px !important; display: inline-block !important;}
+
+.yesbutton_w, .nobutton_w {max-width: 100% !important; width: auto !important;}
+
+.cancelbutton {color: #fff; background: #cccccc; cursor: pointer; border-radius: 5px; padding: 10px 15px 8px 15px !important; margin-top: 20px; white-space: normal; text-transform: uppercase; font-size: 14px !important; }

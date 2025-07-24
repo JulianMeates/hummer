@@ -1,0 +1,217 @@
+
+/*
+
+<-Heading---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------->
+1     2     3     4     5     6     7     8     9     0     1     2     3     4     5     6     7     8     9     0     1     2     3     4     5     6     7     8     9      0     1     2     3     4     
+<-TH-------------------------------------------------------------------------------------->
+
+<- TH1 -----------><- TH2 ----------------------------------------><- TH3 ----------><- TH4 ----------------------------------------><- TH5 ----------><- TH6 ----------------------------------------->
+<- TH7 -----------------------------------------------------------------------------------------------><- TH8 ----------------------------------------------------------------------------------------->
+<- TH9 -----------------------------------------><- TH10 -----------------------------------------><- TH11 -----------------------------------------><- TH12 ----------------------------------------->
+
+<- L1 ------------><- L2 -----------------------------------------><- L3 -----------><- L4 -----------------------------------------><- L5 -----------><- L6 ------------------------------------------>
+<- L7 ------------------------------------------------------------------------------------------------><- L8 ------------------------------------------------------------------------------------------>
+<- L9 ------------------------------------------><- L10 ------------------------------------------><- L11 ------------------------------------------><- L12 ------------------------------------------>
+
+*/
+
+
+.Dtl_Header, .Dtl_Body, .Dtl_Multiple {
+	display: grid;
+	grid-template-columns: repeat(33, 1fr);
+	grid-auto-rows: minmax(min-content, max-content);
+	font-size : 14px;
+	width: 99w;
+	justify-content: space-between;
+}
+
+.Dtl_Multiple:nth-of-type(odd) {
+  background: #e9ecf2;
+}
+
+.Dtl_Heading {
+	grid-column: 1 / span 99;
+	font-size: 24px;
+}
+.Dtl_TH {
+	grid-column: 1 / span 15;
+	font-size: 30px;
+}
+
+
+.Dtl_TH1, .Dtl_L1  { grid-column: 1 / span 3; }
+.Dtl_TH2, .Dtl_L2 { grid-column: 4 / span 8; }
+.Dtl_TH3, .Dtl_L3 { grid-column: 12 / span 3; }
+.Dtl_TH4, .Dtl_L4 { grid-column: 15 / span 8; }
+.Dtl_TH5, .Dtl_L5 { grid-column: 23 / span 3; }
+.Dtl_TH6, .Dtl_L6 { grid-column: 26 / span 99; }
+
+.Dtl_TH7, .Dtl_L7 { grid-column: 1 / span 17; }
+.Dtl_TH8, .Dtl_L8 { grid-column: 18 / span 99; }
+
+.Dtl_TH9, .Dtl_L9 { grid-column: 1 / span 8; }
+.Dtl_TH10, .Dtl_L10 { grid-column: 9 / span 8; }
+.Dtl_TH11, .Dtl_L11 { grid-column: 17 / span 8; }
+.Dtl_TH12, .Dtl_L12 { grid-column: 25 / span 99; }
+
+.Dtl_TH1, .Dtl_TH2, .Dtl_TH3, .Dtl_TH4, .Dtl_TH5, .Dtl_TH6,
+.Dtl_TH7, .Dtl_TH8, .Dtl_TH9, .Dtl_TH10, .Dtl_TH11, .Dtl_TH12 {
+	font-size: 24px;
+}
+
+.Dtl_L1, .Dtl_L2, .Dtl_L3, .Dtl_L4, .Dtl_L5, .Dtl_L6,
+.Dtl_L7, .Dtl_L8, .Dtl_L9, .Dtl_L10, .Dtl_L11, .Dtl_L12 {
+	font-size: 14px;
+	display: table-cell;
+	position: fixed;
+}
+
+
+
+
+/* goto and stop colors etc */
+.SA_COL_Gr { background-color: #4CAF50; } /* Green */
+.SA_COL_Yl { background-color: #e8e813; } /* Yellow */
+.SA_COL_Bu { background-color: #13a5e8; } /* Blue */
+.SA_COL_Pn { background-color: #eb63d8; } /* Pink */
+.SA_COL_Or { background-color: #e3891b; } /* Orange */
+
+.SA_GTS_X { background:url(../Images/RedCross_16.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* Cross Red */
+.SA_GTS_Xg { background:url(../Images/GreyCross_16.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* Cross Grey */
+.SA_GTS_Ds { background:url(../Images/BlueDash.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* Dash Blue */
+.SA_GTS_Dsg { background:url(../Images/GreyDash.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* Dash Grey */
+/*.SA_GTS_Fb { background:url(Images/BlueDash.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* Feedback */
+/*.SA_GTS_Fbg { background:url(Images/GreyDash.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* Feedback Grey */
+.SA_GTS_Pn { background:url(../Images/YellowPencil.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* pencil yellow */
+.SA_GTS_Pg { background:url(../Images/GreyPencil.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* pencil yellow */
+.SA_GTS_Tk { background:url(../Images/GreenTick_16.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* Tick Green */
+.SA_GTS_Tkg { background:url(../Images/GreyTick_16.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* Tick Grey */
+.SA_GTS_Ad { background:url(../Images/DownArrow.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* Arrow Down */
+.SA_GTS_Al { background:url(../Images/LeftArrow.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* Arrow Left */
+.SA_GTS_Ar { background:url(../Images/RightArrow.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* Arrow Right */
+.SA_GTS_Au { background:url(../Images/UpArrow.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* Arrow up */
+
+
+.Dtl_Row {
+	display: inline-block;
+	width :  100%;
+	padding : 15px;
+	overflow: hidden;
+	border-collapse: collapse;
+	position: relative;
+}
+/*
+.Row:after {
+	content: '';
+	display: inline-block;
+}
+*/
+.Dtl_TH1_mcTxt {
+	width : 200px;
+	left : 10px;
+	font-size : 14px;
+	text-align : left;
+	display: table-cell;
+	position: fixed;
+
+}
+.Dtl_TH2_mcTxt {
+	width : 135px;
+	left : 245px;
+	font-size : 14px;
+	text-align : center;
+	display: table-cell;
+	position: fixed;
+}
+.Dtl_TH3_mcTxt {
+	width : 135px;
+	left : 365px;
+	font-size : 14px;
+	text-align : center;
+	display: table-cell;
+	position: fixed;
+}
+.Dtl_TH4_mcTxt {
+	width : 160px;
+	left : 555px;
+	font-size : 14px;
+	text-align : left;
+	display: table-cell;
+	position: fixed;
+
+}
+.Dtl_TH5_mcTxt {
+	width : 160px;
+	left : 760px;
+	font-size : 14px;
+	text-align : left;
+	display: table-cell;
+	position: fixed;
+	
+}
+.Dtl_TH6_mcTxt {
+	width : 160px;
+	left : 965px;
+	font-size : 14px;
+	text-align : left;
+	display: table-cell;
+	position: fixed;
+	
+
+}
+.Dtl_TH7_mcTxt {
+	width : 500px;
+	left : 245px;
+	font-size : 14px;
+	text-align : left;
+	display: table-cell;
+	position: fixed;
+	
+
+}
+.Dtl_C_mcTxt {
+	
+	border-radius: 50%;
+	width : 40px ;
+	height : 15px;
+	max-height : 15px;
+	left : 295px;
+	background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 5px;
+    text-align: center;
+    text-decoration: none;
+    display: table-cell;
+    font-size: 12px;
+    margin: 4px 2px;
+    cursor: pointer;
+	position: fixed;
+
+}
+
+.Dtl_EggSm {
+	
+	border-radius: 50%;
+	width : 40px ;
+	height : 15px;
+	max-height : 15px;
+	left : 410px;
+     border: none;
+    color: white;
+    padding: 5px;
+    text-align: center;
+    text-decoration: none;
+    display: table-cell;
+    font-size: 12px;
+    margin: 4px 2px;
+    cursor: pointer;
+	position: fixed;
+}
+
+.Dtl_CNum_txt {
+	color : #FFFFFF;
+}
+.Dtl_DNum_txt {
+	color : #FFFFFF;
+}

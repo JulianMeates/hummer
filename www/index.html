@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<!-- saved from url=(0029)https://hummer.mikegreerhomes.co.nz/ -->
+<html style="font-size:12px; font-family:'Sinkin Sans'" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <!--<base href="https://halo.torro.app/">--><base href=".">
+    <title>Hummer</title>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="IE=edge">
+    <meta name="MiddleClient" content="width=device-width, initial-scale=1 maximum-scale=1 user-scalable=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=1, viewport-fit=cover">
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8"/>
+    <meta name="generator" content="1.1.960.120"/>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Hummer">
+
+
+
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="/apple-touch-icon-167x167.png">
+
+
+    <link rel="icon" type="image/png" href="android-chrome-512x512.png" sizes="512x512">
+    <link rel="icon" type="image/png" href="android-chrome-192x192.png" sizes="192x192">
+
+    <link rel="icon" type="image/png" href="favicon-96x96.png" sizes="96x96">
+    <link rel="icon" type="image/png" href="favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="favicon-16x16.png" sizes="16x16">
+    <link rel="icon" href="favicon.ico">
+
+    <link rel="stylesheet" href="./css/Structure_10.css?version=1" crossorigin="anonymous">
+    <link rel="stylesheet" href="./css/ActionPanel.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="./css/Display.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="./css/Logon.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="./css/Fonts.css" crossorigin="anonymous">
+    
+    <link rel="stylesheet" href="./css/Camera.css" crossorigin="anonymous">
+ 
+     <link rel="stylesheet" href="/fontawesome-pro-6.3.0/css/all.css" crossorigin="anonymous">
+    <link rel="manifest" href="manifest.json" />
+
+
+    <!--script src="Scripts/base64Safe.js" type="module"></script -->
+    <script src="js/jgsgc.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="js/FloatingPDF_01.js"></script>
+    <script src="js/script_24.js" crossorigin="anonymous" ></script>
+  
+    <script src="js/file.js"></script>
+   
+
+    <script src='https://cdn.plot.ly/plotly-2.24.1.min.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  </head>
+  <body onload="loadLogon()">
+    <div class="container">
+        <aside class="gdActions" id="ActionPane">
+            <div class="processing-overlay" id="processingOverlay">
+              <div class="processing-content">
+                  <div class="spinner"></div>
+                  <div class="processing-text" id="processingText">Processing...</div>
+              </div>
+            </div>
+          <div class="action" id="Action"></div>
+          <div class="a_options" id="A_Options"></div>
+          <footer id="Footer">
+            
+          </footer>
+        </aside>
+        
+        <div id="VerticleResizer" class="vertical-resizer" data-direction="vertical"></div>
+        
+        <div class="display-container">
+            <section class="sa-panel" id="SA_Panel">
+           
+                <button class="sa-menu-button" onclick="toggleSAMenu()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                
+                <div id="SA" style="widht:100%"/>
+            </section>
+            
+            <div id="HorizontalResizer" class="horizontal-resizer" data-direction="horizontal"></div>
+            
+            <section class="details-panel">
+                <button class="details-menu-button" onclick="toggleDetailsMenu()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                
+                <div id="Details" style="widht:100%"/>
+            </section>
+            
+            <div class="sa-menu-overlay" id="SAMenuOverlay">
+                <div class="sa-menu-header">
+                    <h3 class="sa-menu-title">Menu</h3>
+                    <button class="sa-close-button" onclick="toggleSAMenu()">×</button>
+                </div>
+                
+                <div class="sa-menu-items">
+                    <a href="#" class="sa-menu-item">Dashboard</a>
+                    <a href="#" class="sa-menu-item">Profile</a>
+                    <a href="#" class="sa-menu-item">Settings</a>
+                    <a href="#" class="sa-menu-item">Analytics</a>
+                    <a href="#" class="sa-menu-item">Messages</a>
+                    <a href="#" class="sa-menu-item">Help & Support</a>
+                    <a href="#" class="sa-menu-item">Logout</a>
+                </div>
+            </div>
+            
+            <div class="details-menu-overlay" id="DetailsMenuOverlay">
+                <div class="details-menu-header">
+                    <h3 class="details-menu-title">Tools</h3>
+                    <button class="details-close-button" onclick="toggleDetailsMenu()">×</button>
+                </div>
+                
+                <div class="details-menu-items">
+                    <a href="#" class="details-menu-item">Calculator</a>
+                    <a href="#" class="details-menu-item">Calendar</a>
+                    <a href="#" class="details-menu-item">Notes</a>
+                    <a href="#" class="details-menu-item">Files</a>
+                    <a href="#" class="details-menu-item">Camera</a>
+                </div>
+            </div>
+        </div>
+    </div>
+  </body>
+</html>

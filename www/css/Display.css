@@ -1,0 +1,184 @@
+
+table {
+  font-family: "Sinkin Sans", arial, sans-serif;
+  font-size: 11px;
+  border-collapse: collapse;
+  width: 100%;
+ /* table-layout: fixed; */
+}
+
+section.sa table {
+  table-layout: fixed;
+}
+
+td,
+th {
+  border: transparent;
+  text-align: left;
+  padding: 3px;
+}
+
+section.sa td,
+th {
+  vertical-align: text-top;
+  line-height: 1.3;
+  padding-bottom: 6px;
+  /* handle truncating text */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+tr.ShowHover:hover {background-color: #e0f2fe;}
+
+.sa {
+  font-family: "Sinkin Sans";
+  height: 20px;
+  width: 100%;
+  overflow: auto;
+  padding: 0px 5px 10px 15px;
+  transition: transform 0.2s;
+}
+
+.sa::-webkit-scrollbar {
+  width: var(--sb-size);
+}
+
+.sa::-webkit-scrollbar-track {
+  background: var(--sb-track-color);
+  border-radius: 5px;
+}
+
+.sa::-webkit-scrollbar-thumb {
+  background: var(--sb-thumb-color);
+  border-radius: 5px;
+  border: 3px solid white;
+}
+
+/* The sidepanel menu */
+
+.sa_ActionMenuBar1, .sa_ActionMenuBar2, .sa_ActionMenuBar3 {
+    width: 30px;
+    height: 5px;
+    background-color: #333;
+    margin: 6px 0;
+    transition: 0.4s;
+}
+
+.sa_SideTitle {
+  padding: 5px 8px; /* (top bottom) (left right) */
+  margin: 0;
+  border: 0;
+  box-shadow: none;
+  background-color: #002222;
+  background-image: none;
+  color: #DE4A10;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  font-size: 15px;
+  background: #fff;
+  width : 100%;
+  height : 23px;
+  cursor: none;
+  box-sizing: content-box;
+}
+.sa_SideOption {
+  padding: 5px 8px; /* (top bottom) (left right) */
+  margin: 0;
+  border: 1px solid #d2e0f7;
+  box-shadow: none;
+  background-color: #002222;
+  background-image: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  font-size: 15px;
+  background: #fff;
+  width : 100%;
+  height : 23px;
+  cursor: pointer;
+  box-sizing: content-box;
+}
+
+/* Dropdown Button */
+.dropbtn {
+  width:100px;
+  border: 1px
+}
+
+/* The container <div> - needed to position the dropdown content */
+.sa_ActionMenu {
+//    float: right;
+    vertical-align: top;
+  position: absolute;
+  right:20px;
+  display: inline-block;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.sa_Side {
+  display: none;
+  position: absolute;
+  right:17px;
+  background-color: #f1f1f1;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  transition: 2.5s; /* 0.5 second transition effect to slide in the sidepanel */
+  z-index: 1;
+}
+
+/* Change color of dropdown links on hover */
+.sa_Side div:hover {background-color: #ddd;}
+
+/* Show the dropdown menu on hover */
+.sa_ActionMenu:hover .sa_Side {display: block;}
+
+/* Change the background color of the dropdown button when the dropdown content is shown */
+.sa_ActionMenu:hover .dropbtn {color: #144da8;}
+
+.sa_emphesisSelected {
+  background-color: #bdd5fc;
+}
+
+
+@supports not selector(::-webkit-scrollbar) {
+  .sa {
+    scrollbar-color: var(--sb-thumb-color) var(--sb-track-color);
+  }
+}
+
+
+.details > div > table > tbody > tr > td > table > tbody > tr.table_header {
+  font-size: 1rem;
+  font-weight: bold;
+  padding: 0px;
+  border-bottom: 1px solid var(--color-light-blue-100);
+}
+.details > div > table > tbody > tr > td > table > tbody > tr.table_header td,
+th {
+  padding-bottom: 5px;
+}
+
+
+
+.details::-webkit-scrollbar {
+  width: var(--sb-size);
+}
+
+.details::-webkit-scrollbar-track {
+  background: white;
+  border-radius: 5px;
+}
+
+.details::-webkit-scrollbar-thumb {
+  background: var(--sb-thumb-color);
+  border-radius: 5px;
+  border: 3px solid white;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  .details {
+    scrollbar-color: var(--sb-thumb-color) var(--sb-track-color);
+  }
+}

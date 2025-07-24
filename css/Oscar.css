@@ -1,0 +1,425 @@
+/* Modernized Action Panel CSS
+   Maintaining existing color theme and font sizes while improving the UI */
+
+gl {
+  background-color: #0c4a6e;
+  color: white;
+  padding: 0 6px;
+  border-radius: 12px;
+  font-size: 9px;
+}
+
+:root {
+  /* Preserving original variables */
+  --jgs-font-size-data-enter: 1rem;
+  --jgs-font-size-heading: 1.2rem;
+  --jgs-font-size-placeholder: 1rem;
+  --jgs-font-size-option: 1rem;
+  --jgs-font-size-option-info: 0.75rem;
+  --jgs-font-size-option-label: 1rem;
+  --jgs-font-size-option-blank: 1rem;
+  --jgs-font-size-th: 1.1rem;
+  --jgs-font-size-td-value: 1rem;
+
+  /* Enhanced color palette based on existing theme */
+  --color-light-blue-100: #e0f2fe;
+  --color-light-blue-200: #bae6fd;
+  --color-light-blue-600: #0284c7;
+  --color-light-blue-700: #0369a1;
+  --color-light-blue-900: #0c4a6e;
+  --color-cool-grey-100: #f3f4f6;
+  --color-cool-grey-200: #e5e7eb;
+  --color-cool-grey-300: #d1d5db;
+  --color-cool-grey-400: #9ca3af;
+  --color-cool-grey-900: #111827;
+
+  /* New shadow variables */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* ====== Action Panel Styles ====== */
+.ActionPanel {
+  width: 100%;
+  height: 100%;
+  padding: 16px;
+  border-bottom: 3px solid var(--color-light-grey-900);
+  background-color: var(--color-cool-grey-100);
+  box-shadow: var(--shadow-sm);
+  border-radius: 8px 8px 0 0;
+}
+
+.ActionForm {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ====== Heading Section ====== */
+.ActionHeadingSection {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-cool-grey-300);
+  transition: transform 0.2s ease;
+}
+
+.ActionBackButton,
+.ActionHome {
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  border-radius: 50%;
+  padding: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.ActionBackButton:hover,
+.ActionHome:hover {
+  background-color: var(--color-light-blue-200);
+}
+
+@media (hover: hover) and (pointer: coarse), (max-width: 1024px) {
+  .ActionBackButton:hover,
+  .ActionHome:hover {
+    background-color: initial;
+  }
+  .ActionBackButton:active,
+  .ActionHome:active {
+    background-color: var(--color-light-blue-200);
+  }
+}
+
+b,
+i {
+  font-weight: 600;
+  color: var(--color-light-blue-900);
+}
+
+.ActionHeading {
+  width: 100%;
+  text-align: center;
+  color: var(--color-light-blue-900);
+  font-size: var(--jgs-font-size-heading);
+  font-weight: 600;
+  line-height: 1.2em;
+}
+
+.AutoSpecific {
+  top: 15px;
+  position: absolute;
+}
+
+/* ====== Search Filter ====== */
+.ActionFilter {
+  width: 100%;
+  background-color: #ffffff;
+  border: 1px solid var(--color-light-blue-200);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  padding: 6px 12px;
+  display: flex;
+  gap: 8px;
+  box-shadow: var(--shadow-sm);
+}
+
+.logonForm {
+  background-color: #fff;
+
+  box-shadow: var(--shadow-md);
+  margin-bottom: 10px;
+}
+
+#SELECTS {
+  padding: 9px 12px;
+}
+
+.ActionFilter:focus-within {
+  border-color: var(--color-light-blue-600);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2);
+}
+
+.ActionFilter input[type="text"] {
+  font-family: "Sinkin Sans", sans-serif;
+  font-size: var(--jgs-font-size-data-enter);
+  border: none;
+  padding: 0;
+  width: 100%;
+  background: transparent;
+}
+
+.ActionFilter input[type="text"]:focus {
+  outline: none;
+}
+
+.OptionFilter {
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-size: 24px 24px;
+  background-position: center;
+  background-image: url("/Images/icon-search.svg");
+  border: none;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.OptionFilter:hover {
+  opacity: 1;
+}
+
+/* ====== Options Area ====== */
+.a_options {
+  --sb-track-color: #e0f2fe;
+  --sb-thumb-color: #0284c7;
+  position: relative;
+  width: 100%;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 10px;
+  background-color: var(--color-light-blue-100);
+  box-shadow: var(--shadow-sm);
+}
+
+.a_options::-webkit-scrollbar {
+  width: var(--sb-size);
+}
+
+.a_options::-webkit-scrollbar-track {
+  background: var(--sb-track-color);
+  border-radius: 0px;
+}
+
+.a_options::-webkit-scrollbar-thumb {
+  background: var(--sb-thumb-color);
+  border-radius: 8px;
+}
+
+/* ====== Option Items ====== */
+.Option {
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--jgs-font-size-option);
+  background: white;
+  width: 100%;
+  cursor: pointer;
+  padding: 6px 9px;
+  transition: all 0.2s ease;
+  border: 1px solid var(--color-cool-grey-200);
+}
+
+.Option:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.Option:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.Option_XBL {
+  background-color: transparent;
+  border: 0px;
+  font-size: var(--jgs-font-size-option-blank);
+  color: var(--color-light-blue-900);
+  padding: 16px 8px 8px 8px;
+  width: 100%;
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-cool-grey-200);
+  margin-top: 8px;
+}
+
+.OptionIconCodeDesc {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+}
+
+.OptionCellIcon {
+  background-repeat: no-repeat;
+  background-size: 18px 18px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.OptionCellCode {
+  font-size: var(--jgs-font-size-option-info);
+  font-weight: 500;
+  text-transform: uppercase;
+  color: var(--color-cool-grey-400);
+}
+
+.OptionCellDesc {
+  width: 100%;
+  font-size: var(--jgs-font-size-option);
+  padding: 3px 0px;
+  text-align: left;
+}
+
+.OptionCellRight {
+  font-size: var(--jgs-font-size-option-info);
+  text-align: right;
+  display: flex;
+  gap: 5px;
+  color: var(--color-light-blue-700);
+  font-weight: 500;
+}
+
+#KEYPAD > #NextButton > .Option_Next {
+  margin-top: 15px;
+}
+
+#BIGDATA > textarea {
+  width: 100%;
+  background-color: #ffffff;
+  border: 1px solid var(--color-light-blue-200);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  padding: 12px;
+  gap: 8px;
+  box-shadow: var(--shadow-sm);
+}
+
+#BIGDATA > textarea:focus-within,
+#KEYPAD > #Data > input[type="text"]:focus-within,
+#SEARCH > input[type="text"]:focus-within {
+  outline: 2px solid var(--color-light-blue-200);
+}
+
+#KEYPAD > #Data > input[type="text"],
+#SEARCH > input[type="text"] {
+  width: 100%;
+  background-color: #ffffff;
+  border: 1px solid var(--color-light-blue-200);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  padding: 12px;
+  gap: 8px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ====== Action Buttons ====== */
+.Option_Next {
+  padding: 12px 24px;
+  width: 100%;
+  border-radius: 6px;
+  border: none;
+  background-color: var(--color-light-blue-600);
+  font-size: var(--jgs-font-size-option);
+  font-weight: 700;
+  cursor: pointer;
+  color: white;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.Option_Next:disabled {
+  background-color: var(--color-cool-grey-300);
+  cursor: not-allowed;
+}
+
+.Option_Next:hover:not(:disabled) {
+  background-color: var(--color-light-blue-700);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.Option_Next:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* ====== Footer ====== */
+#Footer {
+  padding: 12px;
+  color: var(--color-cool-grey-400);
+  font-size: 0.75rem;
+  text-align: center;
+  border-top: 1px solid var(--color-cool-grey-200);
+}
+
+/* ====== Error Message ====== */
+#ERRORMESSAGE {
+  visibility: hidden;
+  width: 100%;
+  max-width: 640px;
+  background-color: #ef4444;
+  color: white;
+  text-align: center;
+  border-radius: 6px;
+  padding: 12px;
+  position: fixed;
+  z-index: 100;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 20px;
+  box-shadow: var(--shadow-lg);
+}
+
+#ERRORMESSAGE.show {
+  visibility: visible;
+  animation: fadeInOut 3s ease;
+}
+
+.Option_XBL {
+  margin-top: 0;
+  padding-top: 6px;
+}
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  15% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  85% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+}
+
+/* ====== Status indicator styles ====== */
+.status-awaiting {
+  font-size: 9px;
+  font-weight: 500;
+  border-radius: 4px;
+  color: white;
+  padding: 2px 6px;
+  background: var(--color-light-blue-600);
+}
+
+/* ====== Responsive adjustments ====== */
+@media (max-width: 640px) {
+  .ActionPanel {
+    padding: 12px;
+  }
+
+  .a_options {
+    padding: 12px 8px;
+  }
+
+  .Option {
+    padding: 10px 8px;
+  }
+}

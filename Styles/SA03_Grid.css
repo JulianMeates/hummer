@@ -1,0 +1,274 @@
+
+/*
+
+<-Heading------------------------------------------------------------------------------------------------------------------------------------------------------------->
+1     2     3     4     5     6     7     8     9     0     1     2     3     4     5     6     7     8     9     0     1     2     3     4     5     6     7     8     9      0     1     2     3     
+<-TH-------------------------------------------------------------------------------------->      <-ANum----------------------->    <-BNum------------------------->    <-PR------->
+                                                                                                 <-ADesc---------------------->    <-BDesc------------------------>
+((*S_mc************************************************************************************************************************************************************))
+<-L1_mc------------------------------------><-cNum->        <-dNum->                [S0 ,S1 ,S2 ,S3 ,S4 ,S5]         [S6 ,S7 ,S8 ,S9 ,S10,S11]       [S12,S13,S14,S15,S16,S17]
+<-L7_mc----------------------------------------------------------------------> 
+<-L8_mc---------------------------------------------------------------------------------------------------------------------------------------------------------->  
+							               [*C_mc*]	       [*D_mc*]
+<-TH1_mc----------------------------------><------TH2_mc--><------TH3_mc-->         <-TH4_mc--------------->         <-TH5_mc----------------->	     <-TH6_mc----------------->
+<-TH7_mc-------------------------------------------------------------------------->
+<-TH8_mc--------------------------------------------------------------------------------------------------------------------------------------------------------->
+[*Sd_mc************************************************************************************************************************************************************]
+*/
+
+
+.SA03_S, .SA03_Header, .SA03_Multiple {
+	display: grid;
+	grid-template-columns: repeat(33, 1fr);
+	grid-auto-rows: minmax(min-content, max-content);
+	font-size : 14px;
+	width: 99w;
+	justify-content: space-between;
+}
+
+.SA03_Multiple:nth-of-type(odd) {
+  background: #e9ecf2;
+}
+
+.SA03_Heading {
+	grid-column: 1 / span 99;
+	font-size: 24px;
+}
+.SA03_TH {
+	grid-column: 1 / span 15;
+	font-size: 30px;
+}
+.SA03_A { grid-column: 17 / span 5;
+	border-radius: 50%;
+	width : 80px ;
+	height : 30px;
+	max-height : 30px;
+	text-align: center;
+	vertical-align: middle;
+}
+.SA03_B { grid-column: 23 / span 5;
+	border-radius: 50%;
+	width : 80px ;
+	height : 30px;
+	max-height : 30px;
+	text-align: center;
+	vertical-align: middle;
+}
+.SA03_PR { grid-column: 29 / span 4;
+	max-height : 15px;
+}
+
+.SA03_ADesc { grid-column: 17 / span 5; }
+.SA03_BDesc { grid-column: 23 / span 5; }
+
+.SA03_TH1 { grid-column: 1 / span 7; }
+.SA03_TH2 { grid-column: 8 / span 3; }
+.SA03_TH3 { grid-column: 11 / span 3; }
+.SA03_TH4 { grid-column: 15 / span 5; }
+.SA03_TH5 { grid-column: 21 / span 5; }
+.SA03_TH6 { grid-column: 28 / span 5; }
+
+.SA03_TH7 { grid-column: 1 / span 15; }
+
+.SA03_TH8 { grid-column: 1 / span 99; }
+
+
+.SA03_L1 {
+	 grid-column: 1 / span 7;
+ }
+.SA03_C { grid-column: 8 / span 3;
+	border-radius: 50%;
+	width : 40px ;
+	height : 15px;
+	max-height : 15px;
+	text-align: center;
+	vertical-align: middle;
+}
+.SA03_D { grid-column: 11 / span 3;
+	border-radius: 50%;
+	width : 40px ;
+	height : 15px;
+	max-height : 15px;
+	text-align: center;
+	vertical-align: middle;
+}
+
+.SA03_S0 { grid-column: 15 / span 1; }
+.SA03_S1 { grid-column: 16 / span 1; }
+.SA03_S2 { grid-column: 17 / span 1; }
+.SA03_S3 { grid-column: 18 / span 1; }
+.SA03_S4 { grid-column: 19 / span 1; }
+.SA03_S5 { grid-column: 20 / span 1; }
+.SA03_S6 { grid-column: 21 / span 1; }
+.SA03_S7 { grid-column: 22 / span 1; }
+.SA03_S8 { grid-column: 23 / span 1; }
+.SA03_S9 { grid-column: 24 / span 1; }
+.SA03_S10 { grid-column: 25 / span 1; }
+.SA03_S11 { grid-column: 26 / span 1; }
+.SA03_S12 { grid-column: 28 / span 1; }
+.SA03_S13 { grid-column: 29 / span 1; }
+.SA03_S14 { grid-column: 30 / span 1; }
+.SA03_S15 { grid-column: 31 / span 1; }
+.SA03_S16 { grid-column: 32 / span 1; }
+.SA03_S17 { grid-column: 33 / span 1; }
+
+
+.SA03_L7 { grid-column: 1 / span 13; }
+
+.SA03_L8 { grid-column: 1 / span 99; }
+
+.SA03_TLine, .SA03_BLine { grid-column: 1 / span 99;
+	border: 0;
+	background-color: #000;
+	height: 1px;
+}
+
+
+
+
+/* goto and stop colors etc */
+.SA_COL_Gr { background-color: #4CAF50; } /* Green */
+.SA_COL_Yl { background-color: #e8e813; } /* Yellow */
+.SA_COL_Bu { background-color: #13a5e8; } /* Blue */
+.SA_COL_Pn { background-color: #eb63d8; } /* Pink */
+.SA_COL_Or { background-color: #e3891b; } /* Orange */
+
+.SA_GTS_X { background:url(../Images/RedCross_16.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* Cross Red */
+.SA_GTS_Xg { background:url(../Images/GreyCross_16.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* Cross Grey */
+.SA_GTS_Ds { background:url(../Images/BlueDash.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* Dash Blue */
+.SA_GTS_Dsg { background:url(../Images/GreyDash.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* Dash Grey */
+/*.SA_GTS_Fb { background:url(Images/BlueDash.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* Feedback */
+/*.SA_GTS_Fbg { background:url(Images/GreyDash.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* Feedback Grey */
+.SA_GTS_Pn { background:url(../Images/YellowPencil.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* pencil yellow */
+.SA_GTS_Pg { background:url(../Images/GreyPencil.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* pencil yellow */
+.SA_GTS_Tk { background:url(../Images/GreenTick_16.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* Tick Green */
+.SA_GTS_Tkg { background:url(../Images/GreyTick_16.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* Tick Grey */
+.SA_GTS_Ad { background:url(../Images/DownArrow.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* Arrow Down */
+.SA_GTS_Al { background:url(../Images/LeftArrow.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* Arrow Left */
+.SA_GTS_Ar { background:url(../Images/RightArrow.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* Arrow Right */
+.SA_GTS_Au { background:url(../Images/UpArrow.png) center right no-repeat; background-size: contain; padding:0 16px 0 0; white-space:nowrap; }  /* Arrow up */
+
+
+.SA03_Row {
+	display: inline-block;
+	width :  100%;
+	padding : 15px;
+	overflow: hidden;
+	border-collapse: collapse;
+	position: relative;
+}
+/*
+.Row:after {
+	content: '';
+	display: inline-block;
+}
+*/
+.SA03_TH1_mcTxt {
+	width : 200px;
+	left : 10px;
+	font-size : 14px;
+	text-align : left;
+	display: table-cell;
+	position: fixed;
+
+}
+.SA03_TH2_mcTxt {
+	width : 135px;
+	left : 245px;
+	font-size : 14px;
+	text-align : center;
+	display: table-cell;
+	position: fixed;
+}
+.SA03_TH3_mcTxt {
+	width : 135px;
+	left : 365px;
+	font-size : 14px;
+	text-align : center;
+	display: table-cell;
+	position: fixed;
+}
+.SA03_TH4_mcTxt {
+	width : 160px;
+	left : 555px;
+	font-size : 14px;
+	text-align : left;
+	display: table-cell;
+	position: fixed;
+
+}
+.SA03_TH5_mcTxt {
+	width : 160px;
+	left : 760px;
+	font-size : 14px;
+	text-align : left;
+	display: table-cell;
+	position: fixed;
+	
+}
+.SA03_TH6_mcTxt {
+	width : 160px;
+	left : 965px;
+	font-size : 14px;
+	text-align : left;
+	display: table-cell;
+	position: fixed;
+	
+
+}
+.SA03_TH7_mcTxt {
+	width : 500px;
+	left : 245px;
+	font-size : 14px;
+	text-align : left;
+	display: table-cell;
+	position: fixed;
+	
+
+}
+.SA03_C_mcTxt {
+	
+	border-radius: 50%;
+	width : 40px ;
+	height : 15px;
+	max-height : 15px;
+	left : 295px;
+	background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 5px;
+    text-align: center;
+    text-decoration: none;
+    display: table-cell;
+    font-size: 12px;
+    margin: 4px 2px;
+    cursor: pointer;
+	position: fixed;
+
+}
+
+.SA03_EggSm {
+	
+	border-radius: 50%;
+	width : 40px ;
+	height : 15px;
+	max-height : 15px;
+	left : 410px;
+     border: none;
+    color: white;
+    padding: 5px;
+    text-align: center;
+    text-decoration: none;
+    display: table-cell;
+    font-size: 12px;
+    margin: 4px 2px;
+    cursor: pointer;
+	position: fixed;
+}
+
+.SA03_CNum_txt {
+	color : #FFFFFF;
+}
+.SA03_DNum_txt {
+	color : #FFFFFF;
+}

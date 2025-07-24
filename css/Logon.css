@@ -1,0 +1,120 @@
+.logonForm {
+  --color-light-blue-100: #f3f4f6;
+  --color-light-blue-600: #9ca3af;
+  --color-light-blue-900: #111827;
+  --color-cool-grey-100: #f3f4f6;
+  --color-cool-grey-400: #9ca3af;
+  --color-cool-grey-900: #111827;
+  box-sizing: border-box;
+  overflow: hidden;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  background-color: #fff;
+  border-radius: 6px;
+  transition: transform 0.2s;
+  text-align: center;
+  box-shadow: 0 20px 25px -5px rgba(125, 211, 252, 0.1),
+    0 8px 10px -6px rgba(125, 211, 252, 0.1);
+}
+
+.logonLogo {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  display: grid;
+  place-items: center;
+  background-color: var(--color-light-blue-600);
+  color: white;
+}
+
+.halo {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  background-color: transparent;
+  width: 100px;
+  aspect-ratio: 1;
+  border-radius: 100px;
+  box-shadow: 0 0 60px 10px #e0f2fe, inset 0 0 60px 5px #e0f2fe;
+  filter: blur(2px);
+}
+
+.logonLogo > h1 {
+  text-transform: uppercase;
+  font-size: 44px;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  margin: 0px;
+}
+
+.logonMessage {
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.logonBody {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0px 32px 32px 32px;
+  width: 100%;
+}
+
+.logonLabel {
+  visibility: hidden;
+  height: 0;
+}
+
+.logonInput {
+  font-family: "Sinkin Sans";
+  background-color: var(--color-cool-grey-100);
+  border: none !important;
+  border-radius: 3px !important;
+  display: block;
+  width: 100%;
+  margin-bottom: 15px;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.logonInput::placeholder {
+  color: var(--color-cool-grey-400);
+}
+
+.logonButton {
+  display: flex;
+  padding: 16px 24px;
+  border-radius: 3px;
+  border: none;
+
+  color: white;
+  font-family: "Sinkin Sans";
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  line-height: 1;
+
+  background-color: var(--color-light-blue-900);
+  transition: all 100ms ease-out;
+  cursor: pointer;
+}
+
+.logonButton:hover {
+  background-color: var(--color-light-blue-600);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.logonWrap {
+  /* display: flex;
+  justify-content: center;
+  align-items: center; */
+}

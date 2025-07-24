@@ -1,0 +1,144 @@
+.SA03_L1_mcTxt {
+
+}
+.SA03_L7_mcTxt {
+
+}
+.SA03_Row {
+	display: inline-block;
+	width :  100%;
+	padding : 15px;
+	overflow: hidden;
+	border-collapse: collapse;
+	position: relative;
+}
+/*
+.Row:after {
+	content: '';
+	display: inline-block;
+}
+*/
+.SA03_TH1_mcTxt {
+	width : 200px;
+	left : 10px;
+	font-size : 12px;
+	text-align : left;
+	display: table-cell;
+	position: fixed;
+
+}
+.SA03_TH2_mcTxt {
+	width : 135px;
+	left : 245px;
+	font-size : 12px;
+	text-align : center;
+	display: table-cell;
+	position: fixed;
+}
+.SA03_TH3_mcTxt {
+	width : 135px;
+	left : 365px;
+	font-size : 12px;
+	text-align : center;
+	display: table-cell;
+	position: fixed;
+}
+.SA03_TH4_mcTxt {
+	width : 160px;
+	left : 555px;
+	font-size : 12px;
+	text-align : left;
+	display: table-cell;
+	position: fixed;
+
+}
+.SA03_TH5_mcTxt {
+	width : 160px;
+	left : 760px;
+	font-size : 12px;
+	text-align : left;
+	display: table-cell;
+	position: fixed;
+	
+}
+.SA03_TH6_mcTxt {
+	width : 160px;
+	left : 965px;
+	font-size : 12px;
+	text-align : left;
+	display: table-cell;
+	position: fixed;
+	
+
+}
+.SA03_TH7_mcTxt {
+	width : 500px;
+	left : 245px;
+	font-size : 12px;
+	text-align : left;
+	display: table-cell;
+	position: fixed;
+	
+
+}
+.SA03_C_mcTxt {
+	
+	border-radius: 50%;
+	width : 40px ;
+	height : 15px;
+	max-height : 15px;
+	left : 295px;
+	background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 5px;
+    text-align: center;
+    text-decoration: none;
+    display: table-cell;
+    font-size: 12px;
+    margin: 4px 2px;
+    cursor: pointer;
+	position: fixed;
+
+}
+.SA03_D_mcTxt {
+	
+	border-radius: 50%;
+	width : 40px ;
+	height : 15px;
+	max-height : 15px;
+	left : 410px;
+	background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 5px;
+    text-align: center;
+    text-decoration: none;
+    display: table-cell;
+    font-size: 12px;
+    margin: 4px 2px;
+    cursor: pointer;
+	position: fixed;
+}
+
+.SA03_CNum_txt {
+	color : #FFFFFF;
+}
+.SA03_DNum_txt {
+	color : #FFFFFF;
+}
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  /* width: 100%; */
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
