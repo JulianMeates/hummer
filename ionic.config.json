@@ -1,5 +1,8 @@
 {
   "name": "Hummer",
-  "integrations": {},
-  "type": "custom"
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "custom",
+  "id": "b4a29bba"
 }

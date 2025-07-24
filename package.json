@@ -2,9 +2,10 @@
   "name": "hummer",
   "version": "1.0.0",
   "main": "cecc.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+   "scripts": {
+    "ionic:build": "npm run build",
+  "build": "echo 'Copying files...' && xcopy /E /I /Y css www\\css\\ && xcopy /E /I /Y js www\\js\\ && xcopy /E /I /Y Images www\\Images\\ && copy /Y index.html www\\"
+    },
   "keywords": [],
   "author": "",
   "license": "ISC",
