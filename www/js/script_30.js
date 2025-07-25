@@ -14,6 +14,9 @@ var lChunkNumber = 0;
 var reader = null;
 var fileToUpload = null;
 let settingsInitialized = false;
+let pendingPhotos = [];
+let isUploadingPhotos = false;
+const IS_IOS_DEVICE = testIsIOS();
 
 (function(exports) {
   var base32 = {
@@ -850,8 +853,8 @@ const fileFromCamera = document.getElementById('cameraInput').files[0];
   })
   .then(function(compressedFile) {
     // Log compression results
-    console.log('Original size: ' + (fileFromCamera.size / 1024) + ' KB');
-    console.log('Compressed size: ' + (compressedFile.size / 1024) + ' KB');
+ //   console.log('Original size: ' + (fileFromCamera.size / 1024) + ' KB');
+  //  console.log('Compressed size: ' + (compressedFile.size / 1024) + ' KB');
     
     fileToUpload = compressedFile;
     
@@ -905,8 +908,8 @@ function submitFileSplit(n) {
         })
         .then(function(compressedFile) {
             // Log compression results
-            console.log('Original size: ' + (fileFromCamera.size / 1024) + ' KB');
-            console.log('Compressed size: ' + (compressedFile.size / 1024) + ' KB');
+         //   console.log('Original size: ' + (fileFromCamera.size / 1024) + ' KB');
+        //  console.log('Compressed size: ' + (compressedFile.size / 1024) + ' KB');
             
             fileToUpload = compressedFile;
             submitFile_DestinationHandle();
@@ -944,9 +947,9 @@ function submitFile_DestinationHandle() {
 
     var lJson = JSON.stringify(lObj);
     
-    console.log('Requesting destination handle for file:', fileToUpload.name, 'Size:', fileToUpload.size);
+ //   console.log('Requesting destination handle for file:', fileToUpload.name, 'Size:', fileToUpload.size);
   
-    JadeRestRequest(lJson)
+    queuedJadeRestRequest(lJson, false)
     .then(response => {
         try {
             var lResponse;
@@ -957,14 +960,14 @@ function submitFile_DestinationHandle() {
             }
             
             var lJadeData = JSON.parse(lResponse);
-            console.log('Destination handle response:', lJadeData);
+        //    console.log('Destination handle response:', lJadeData);
 
             if (Object.keys(lJadeData).length > 0 && lJadeData.fileHandle) {
                 lFileHandle = lJadeData.fileHandle;
                 lBlockSize = lJadeData.blockSize;
                 lNumberOfChunks = Math.ceil(fileToUpload.size / lBlockSize);
                 
-                console.log('Got file handle:', lFileHandle, 'Block size:', lBlockSize, 'Number of chunks:', lNumberOfChunks);
+         //       console.log('Got file handle:', lFileHandle, 'Block size:', lBlockSize, 'Number of chunks:', lNumberOfChunks);
                 
                 // Reset chunk counter and start uploading
                 lChunkNumber = 0;
@@ -993,7 +996,7 @@ function submitFile_NextChunk() {
     //  send each chunk
     lChunkNumber += 1;
     
-    console.log('Preparing chunk', lChunkNumber, 'of', lNumberOfChunks);
+ //   console.log('Preparing chunk', lChunkNumber, 'of', lNumberOfChunks);
     
     //  should never happen
     if (lChunkNumber > lNumberOfChunks) {
@@ -1004,13 +1007,13 @@ function submitFile_NextChunk() {
     lByteEnd = Math.ceil((fileToUpload.size / lNumberOfChunks) * lChunkNumber);
     lChunk = fileToUpload.slice(lByteIndex, lByteEnd);
     
-    console.log('Chunk', lChunkNumber, 'bytes:', lByteIndex, 'to', lByteEnd, 'size:', lChunk.size);
+  //  console.log('Chunk', lChunkNumber, 'bytes:', lByteIndex, 'to', lByteEnd, 'size:', lChunk.size);
     
     lByteIndex += (lByteEnd - lByteIndex);
       
     reader.readAsDataURL(lChunk);
     reader.onloadend = function() {
-        console.log('Chunk', lChunkNumber, 'read successfully, data length:', reader.result.length);
+    //    console.log('Chunk', lChunkNumber, 'read successfully, data length:', reader.result.length);
         submitFile_SendChunk(reader.result, lChunkNumber, lNumberOfChunks);
     };
     
@@ -1029,7 +1032,7 @@ function submitFile_SendChunk(pChunk, pChunkNumber, pNumberOfChunks) {
     var lPercent = ((100 * pChunkNumber) / pNumberOfChunks).toFixed();
     var f = document.getElementById(glbBaseFormName);
     
-    console.log('Sending chunk', pChunkNumber, 'of', pNumberOfChunks, 'Progress:', lPercent + '%');
+   // console.log('Sending chunk', pChunkNumber, 'of', pNumberOfChunks, 'Progress:', lPercent + '%');
     
     lObj["systemName"] = glbSystemName;  
     lObj["formName"] = "FileChunkSave";
@@ -1044,7 +1047,7 @@ function submitFile_SendChunk(pChunk, pChunkNumber, pNumberOfChunks) {
     
     showFooterError("Uploading file " + fileToUpload.name + " " + lPercent + '% Complete');
 
-    JadeRestRequest(lJson)
+    queuedJadeRestRequest(lJson, true)
     .then(response => {
         try {
             var lResponse;
@@ -1055,14 +1058,14 @@ function submitFile_SendChunk(pChunk, pChunkNumber, pNumberOfChunks) {
             }
             
             var lJadeData = JSON.parse(lResponse);
-            console.log('Chunk', pChunkNumber, 'response:', lJadeData);
+        //    console.log('Chunk', pChunkNumber, 'response:', lJadeData);
 
             if (Object.keys(lJadeData).length > 0) {
                 lStatus = lJadeData.status;
-                console.log('Chunk', pChunkNumber, 'status:', lStatus);
+          //      console.log('Chunk', pChunkNumber, 'status:', lStatus);
                 
                 if (lStatus === "Complete" || pChunkNumber >= pNumberOfChunks) {
-                    console.log('Upload complete! Submitting form with file handle:', lFileHandle);
+            //        console.log('Upload complete! Submitting form with file handle:', lFileHandle);
                     //  submit the form
                     //  update the form to include the destination file handle
                     glbSubmitted = false;
@@ -1071,23 +1074,23 @@ function submitFile_SendChunk(pChunk, pChunkNumber, pNumberOfChunks) {
                     submitForm(f);
                     
                 } else if (lStatus === "Done") {
-                    console.log('Chunk', pChunkNumber, 'completed, sending next chunk');
+               //     console.log('Chunk', pChunkNumber, 'completed, sending next chunk');
                     submitFile_NextChunk();
                     
                 } else if (lStatus === "Error") {
-                    console.error('Server reported error for chunk', pChunkNumber, ':', lJadeData.error);
+              //      console.error('Server reported error for chunk', pChunkNumber, ':', lJadeData.error);
                     glbSubmitted = false;
                     hideProcessing();
                     window.document.body.style.cursor = "auto"; 
                     showFooterError("Server error processing chunk - please contact Torro Software");
                     
                 } else {
-                    console.warn('Unknown status for chunk', pChunkNumber, ':', lStatus);
+                 //   console.warn('Unknown status for chunk', pChunkNumber, ':', lStatus);
                     // Continue anyway
                     submitFile_NextChunk();
                 }
             } else {
-                console.error('Empty response for chunk', pChunkNumber);
+           //     console.error('Empty response for chunk', pChunkNumber);
                 glbSubmitted = false;
                 hideProcessing();
                 window.document.body.style.cursor = "auto"; 
@@ -1139,7 +1142,7 @@ function loadLogon_New() {
   json = json.replace("}", ',"systemName":"' + glbSystemName + '"}');
  
 
-JadeRestRequest (json)
+queuedJadeRestRequest (json, false)
   .then (response =>  
       {
      PopulatePanels (response);
@@ -1228,22 +1231,17 @@ function loadLogon() {
 
 
 function submitForm(formElement) {
-
   if (glbSubmitted) {
     return;
   }
-
   var lOz = formElement.oz;
   if (typeof(lOz) == 'undefined' || lOz == null  || lOz.value != "Rest" ) {
     formElement.submit();
     return;
   }
-
   glbSubmitted = true;
-
   showProcessingForAction ("");
   window.document.body.style.cursor = "wait"; 
-
   var win = window;
   var formData = new FormData(formElement);
   var object = {};
@@ -1257,50 +1255,66 @@ function submitForm(formElement) {
   object["formName"] = formElement.name;
   formData.forEach((value, key) => {
  
-
-  if (key == "doc") {
-       lValue = value;
-  } else if (key == "fileName") {
-       lValue = Conversions.base32.encode(value.name);
-  } else if (key == "file") {
-       lValue = Conversions.base32.encode(value.name);
-  } else if (key == "rid") {
-      lValue = generateRandomString ();
-  } else {
-     cleanedText = value.replace(/[\x00-\x09\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, "");
-     cleanedText = cleanedText.replace(/<0x[0-9A-Fa-f]{1,2}>/gi, '');   
-     cleanedText = cleanedText.replace(/[–—]/g, '-');
-     lValue = Conversions.base32.encode(cleanedText);
-  
-  }
-
-
-  if(!Reflect.has(object, key)){
-      object[key] = lValue;
-      return;
-  }
-  if(!Array.isArray(object[key])){
-      object[key] = [object[key]];
-  }
-  object[key].push(lValue);
-});
-
-var json = JSON.stringify(object);
-json = json.replace("}", ',"systemName":"' + glbSystemName + '"}');
-lUrl = glbPostRestUrl;
-
-
-JadeRestRequest (json)
-  .then (response =>  
-      {
-     PopulatePanels (response);
-     })
-      .catch(error => {
-       glbSubmitted = false;
-       hideProcessing ();
-       window.document.body.style.cursor = "auto"; 
-
+    if (key == "doc") {
+         lValue = value;
+    } else if (key == "fileName") {
+         lValue = Conversions.base32.encode(value.name);
+    } else if (key == "file") {
+         lValue = Conversions.base32.encode(value.name);
+    } else if (key == "rid") {
+        lValue = generateRandomString ();
+    } else {
+       cleanedText = value.replace(/[\x00-\x09\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, "");
+       cleanedText = cleanedText.replace(/<0x[0-9A-Fa-f]{1,2}>/gi, '');   
+       cleanedText = cleanedText.replace(/[–—]/g, '-');
+       lValue = Conversions.base32.encode(cleanedText);
+    
+    }
+    if(!Reflect.has(object, key)){
+        object[key] = lValue;
+        return;
+    }
+    if(!Array.isArray(object[key])){
+        object[key] = [object[key]];
+    }
+    object[key].push(lValue);
   });
+  
+  var json = JSON.stringify(object);
+  json = json.replace("}", ',"systemName":"' + glbSystemName + '"}');
+  lUrl = glbPostRestUrl;
+  
+  queuedJadeRestRequest (json, false)
+    .then (response => {
+       // console.log('Question submitted successfully:', response);
+        
+        // Call the upload success callback - entire process is now complete!
+        if (typeof window.uploadOnSuccess === 'function') {
+          //  console.log('Calling uploadOnSuccess callback after question submission...');
+            try {
+                window.uploadOnSuccess({
+                    fileHandle: object.doc, // The file handle that was uploaded
+                    fileName: fileToUpload ? fileToUpload.name : 'unknown',
+                    questionResponse: response,
+                    formData: object,
+                    status: 'Complete'
+                });
+            } catch (callbackError) {
+                console.error('Error in uploadOnSuccess callback:', callbackError);
+            }
+        } else {
+            console.warn('uploadOnSuccess callback not found');
+        }
+        
+        // Your existing response handling
+        PopulatePanels (response);
+    })
+    .catch(error => {
+        console.error('Question submission failed:', error);
+        glbSubmitted = false;
+        hideProcessing ();
+        window.document.body.style.cursor = "auto"; 
+    });
 }
 
 function PopulatePanels (pResponse){
@@ -1362,10 +1376,14 @@ function PopulatePanels (pResponse){
           }
 
       const regex = /scrolltome="([^"]+)"/i;
-       match = lSectionHtml.match(regex);
-       if (match){
-        console.log(match[1]);
-         }
+      match = lSectionHtml.match(regex);
+      if (match){
+       // console.log(match[1]);
+      }
+      if (!lSectionHtml.includes ( '<div class="camera-container">')){
+          stopCamera();
+      }
+
     } else if (lHaveAction) {
         var element = document.getElementById("A_Options");
         element.innerHTML = "&nbsp;";
@@ -1442,6 +1460,7 @@ function PopulatePanels (pResponse){
     var f = document.getElementById(glbBaseFormName);
     if (f.sid){
       glb_sid = f.sid.value;
+      initializeActivityTimer();
     }
    
     checkForStoredImages ();
@@ -1495,7 +1514,7 @@ function showProcessing(message = 'Processing...', delay = 1000) {
             document.body.style.overflow = 'hidden'; // Prevent background scrolling
         }
         
-        console.log('Processing overlay shown:', message);
+      //  console.log('Processing overlay shown:', message);
         processingTimeout = null; // Clear the timeout ID
     }, delay);
 }
@@ -1505,7 +1524,7 @@ function hideProcessing() {
     if (processingTimeout) {
         clearTimeout(processingTimeout);
         processingTimeout = null;
-        console.log('Processing overlay timeout cancelled');
+     //   console.log('Processing overlay timeout cancelled');
     }
     
     const overlay = document.getElementById('processingOverlay');
@@ -1822,186 +1841,652 @@ function submitValue_Web (n) {
 
 
 
+// Initialize the timer only after login (modify your existing code)
+let activityTimer = null;
 
-
-  function JadeRestRequest (formData, options = {}) {
-  // Default options
-  const config = {
-    maxRetries: options.maxRetries || 3,           // Maximum number of retry attempts
-    retryDelay: options.retryDelay || 1000,        // Delay between retries in ms
-    timeout: options.timeout || 30000,             // Request timeout in ms
-    forceXHR: options.forceXHR || false,           // Force XMLHttpRequest instead of fetch
-    debug: options.debug || false,                 // Enable detailed logging
-    url: options.url || glbPostRestUrl
-  };
-  
-  // Track retry count
-  let retryCount = 0;
-  
-  // Set up logging based on debug flag
-  const log = config.debug 
-    ? (...args) => console.log(`[JSON Login]`, ...args)
-    : () => {};
-    
-  const logError = config.debug
-    ? (...args) => console.error(`[JSON Login ERROR]`, ...args)
-    : () => {};
-  
-  
-  
-  // Create the request function with retry logic
-  const makeRequest = (data, retries) => {
-    return new Promise((resolve, reject) => {
-     // const normalizedData = data; //normalizeData(data);
-      
-      // Convert to JSON string
-      var jsonData = data; 
-     console.log(`Attempt ${retries + 1}/${config.maxRetries + 1} - Sending JSON data:`, jsonData);
-      
-      // Create an abort controller for timeout handling with fetch
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => {
-        controller.abort();
-      //  logError(`Request timed out after ${config.timeout}ms`);
-      }, config.timeout);
-      
-      // Choose between fetch and XMLHttpRequest
-      if (!config.forceXHR && 'fetch' in window) {
-       console.log('Using fetch API with JSON payload');
-        
-        fetch(config.url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': "*/*", 
-            'Cache-Control': 'no-cache',
-            'X-Requested-With': 'XMLHttpRequest',
-            // Add a random header to prevent caching
-            'X-Request-ID': `torro-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-          },
-          body: jsonData,
-          credentials: 'include',
-          mode: 'cors',
-          signal: controller.signal
-        })
-        .then(response => {
-          clearTimeout(timeoutId);
-          
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then(data => {
-         console.log('Request successful!');
-          resolve(data);
-        })
-        .catch(error => {
-          clearTimeout(timeoutId);
-          logError('Fetch error:', error);
-          
-          // Determine if we should retry
-          if (retries < config.maxRetries) {
-           console.log(`Retrying in ${config.retryDelay}ms...`);
-            setTimeout(() => {
-              makeRequest(data, retries + 1)
-                .then(resolve)
-                .catch(reject);
-            }, config.retryDelay);
-          } else {
-            // Fall back to XMLHttpRequest on the last retry
-           console.log('Falling back to XMLHttpRequest');
-            xhrFallback(jsonData)
-              .then(resolve)
-              .catch(reject);
-          }
+// Call this after successful login instead of on page load
+function initializeActivityTimer() {
+    if (!activityTimer) {
+        activityTimer = new ActivityTimer({
+            idleTimeout: 5 * 60 * 1000, // 5 minutes
+            onIdle: function() {
+            //    console.log('User has been idle, starting photo upload process...');
+                startPhotoUploadProcess();
+            }
         });
-      } else {
-        // Use XMLHttpRequest
-        xhrFallback(jsonData)
-          .then(resolve)
-          .catch(error => {
-            logError('XHR error:', error);
-            
-            // Determine if we should retry
-            if (retries < config.maxRetries) {
-             console.log(`Retrying in ${config.retryDelay}ms...`);
-              setTimeout(() => {
-                makeRequest(data, retries + 1)
-                  .then(resolve)
-                  .catch(reject);
-              }, config.retryDelay);
-            } else {
-              reject(error);
-            }
-          });
-      }
-    });
-  };
-  
-  // XMLHttpRequest fallback function
-  const xhrFallback = (jsonData) => {
-    return new Promise((resolve, reject) => {
-     console.log('Using XMLHttpRequest with JSON payload');
-      
-      const xhr = new XMLHttpRequest();
-      
-      // Set up timeout handling
-      xhr.timeout = config.timeout;
-      
-      xhr.onreadystatechange = function() {
-       console.log(`XHR state: ${xhr.readyState}, status: ${xhr.status}`);
-        
-        if (xhr.readyState === 4) {
-          if (xhr.status >= 200 && xhr.status < 300) {
-           console.log('XHR successful!');
-            try {
-              const jsonResponse = JSON.parse(xhr.responseText);
-              resolve(jsonResponse);
-            } catch (e) {
-              console.log('Error parsing JSON response:', e);
-              resolve(xhr.responseText); // Fallback to raw text
-            }
-          } else {
-            console.log(`XHR failed with status: ${xhr.status}`);
-            reject(new Error(`Request failed: ${xhr.status} ${xhr.statusText}`));
-          }
-        }
-      };
-      
-      xhr.ontimeout = function() {
-        console.log('XHR timed out');
-        reject(new Error('Request timed out'));
-      };
-      
-      xhr.onerror = function(e) {
-        console.log('XHR network error:', e);
-        reject(new Error('Network error occurred'));
-      };
-      
-      try {
-        xhr.open('POST', config.url, true);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.setRequestHeader("Accept", "*/*");
-        xhr.setRequestHeader('Cache-Control', 'no-cache');
-        // Add a random header to prevent caching
-        xhr.setRequestHeader('X-Request-ID', `torro-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
-        
-        // iOS can have issues with withCredentials in some contexts
-        xhr.withCredentials = true;
-        
-        xhr.send(jsonData);
-      } catch (error) {
-        console.log('XHR setup error:', error);
-        reject(error);
-      }
-    });
-  };
-  
-  // Start the request process
-  return makeRequest(formData, 0);
+      //  console.log('✅ Activity timer initialized after login');
+    }
 }
 
+// Add this to your successful login response handler
+function handleLoginSuccess() {
+    // Your existing login success code...
+    
+    // Initialize the activity timer after login
+    initializeActivityTimer();
+}
+
+let requestQueue = [];
+let isProcessing = false;
+
+
+async function smartJadeRestRequest(formData, skipTimerReset = false) {
+    
+    
+    if (IS_IOS_DEVICE) {
+        // Check if we need a preemptive sacrifice
+        await smartSacrificeManager.checkIfSacrificeNeeded(glbPostRestUrl);
+    }
+    
+    try {
+        const result = await JadeRestRequest(formData, skipTimerReset);
+        
+        if (IS_IOS_DEVICE) {
+            smartSacrificeManager.recordSuccess();
+        }
+        
+        return result;
+    } catch (error) {
+        if (IS_IOS_DEVICE) {
+            smartSacrificeManager.recordFailure();
+        }
+        throw error;
+    }
+}
+
+
+function queuedJadeRestRequest (formData, skipTimerReset = false) {  //Smart
+    return new Promise((resolve, reject) => {
+        requestQueue.push({ 
+            formData, 
+            skipTimerReset, 
+            resolve, 
+            reject,
+            useSmart: true  // Flag to use smart request
+        });
+        processSmartQueue();
+    });
+}
+
+async function processSmartQueue() {
+    if (isProcessing || requestQueue.length === 0) return;
+    
+    console.log(`📋 Processing smart queue: ${requestQueue.length} requests`);
+    isProcessing = true;
+    
+    while (requestQueue.length > 0) {
+        const { formData, skipTimerReset, resolve, reject, useSmart } = requestQueue.shift();
+        
+        try {
+            console.log(`🔄 Processing smart queued request...`);
+            
+            // Use smart request function
+            const result = await smartJadeRestRequest(formData, skipTimerReset);
+            
+            resolve(result);
+            console.log(`✅ Smart queued request completed`);
+        } catch (error) {
+            console.log(`❌ Smart queued request failed:`, error.message);
+            reject(error);
+        }
+        
+        // Wait between requests
+        if (requestQueue.length > 0) {
+            console.log(`⏳ Waiting 200ms before next request...`);
+            await new Promise(r => setTimeout(r, 200));
+        }
+    }
+    
+    isProcessing = false;
+    console.log(`✅ Smart queue processing complete`);
+}
+
+async function processRequestQueueWithSacrifice() {
+    if (isProcessing || requestQueue.length === 0) return;
+    
+    console.log(`📋 Processing queue: ${requestQueue.length} requests`);
+    isProcessing = true;
+    
+    // Make sacrificial request before processing queue
+    await smartSacrificeManager.makeSacrificialRequest(glbPostRestUrl);
+    
+    while (requestQueue.length > 0) {
+        const { formData, skipTimerReset, resolve, reject } = requestQueue.shift();
+        
+        try {
+            console.log(`🔄 Processing queued request after sacrifice...`);
+            const result = await JadeRestRequest(formData, skipTimerReset);
+            resolve(result);
+            console.log(`✅ Queued request completed`);
+        } catch (error) {
+            console.log(`❌ Queued request failed:`, error.message);
+            reject(error);
+        }
+        
+        // Shorter delay since connection should be cleared
+        if (requestQueue.length > 0) {
+            console.log(`⏳ Waiting 150ms before next request...`);
+            await new Promise(r => setTimeout(r, 150));
+        }
+    }
+    
+    isProcessing = false;
+    console.log(`✅ Queue processing complete`);
+}
+
+
+async function processRequestQueue_WithWarmup () { //WithWarmup
+    if (isProcessing || requestQueue.length === 0) return;
+    
+    console.log(`📋 Processing queue: ${requestQueue.length} requests`);
+    isProcessing = true;
+    
+    // Warmup connection before processing queue
+    await connectionWarmer.warmupConnection(glbPostRestUrl);
+    
+    while (requestQueue.length > 0) {
+        const { formData, skipTimerReset, resolve, reject } = requestQueue.shift();
+        
+        try {
+            console.log(`🔄 Processing queued request...`);
+            const result = await JadeRestRequest(formData, skipTimerReset);
+            resolve(result);
+            console.log(`✅ Queued request completed`);
+        } catch (error) {
+            console.log(`❌ Queued request failed:`, error.message);
+            reject(error);
+        }
+        
+        // Wait between requests (shorter delay since connection is warmed)
+        if (requestQueue.length > 0) {
+            console.log(`⏳ Waiting 200ms before next request...`);
+            await new Promise(r => setTimeout(r, 200));
+        }
+    }
+    
+    isProcessing = false;
+    console.log(`✅ Queue processing complete`);
+}
+
+
+async function processRequestQueueNoWarmup() {
+    if (isProcessing || requestQueue.length === 0) return;
+    
+    console.log(`📋 Processing queue: ${requestQueue.length} requests`);
+    isProcessing = true;
+    
+    while (requestQueue.length > 0) {
+        const { formData, skipTimerReset, resolve, reject } = requestQueue.shift();
+        
+        try {
+            console.log(`🔄 Processing queued request...`);
+            const result = await JadeRestRequest(formData, skipTimerReset);
+            resolve(result);
+            console.log(`✅ Queued request completed`);
+        } catch (error) {
+            console.log(`❌ Queued request failed:`, error.message);
+            reject(error);
+        }
+        
+        // Wait 300ms between requests
+        if (requestQueue.length > 0) {
+            console.log(`⏳ Waiting 300ms before next request...`);
+            await new Promise(r => setTimeout(r, 300));
+        }
+    }
+    
+    isProcessing = false;
+    console.log(`✅ Queue processing complete`);
+}
+
+
+function JadeRestRequest(formData, skipTimerReset = false) {
+    // Only reset the timer if skipTimerReset is false and this isn't an upload request
+    if (!skipTimerReset && activityTimer && typeof activityTimer.resetTimer === 'function') {
+        activityTimer.resetTimer();
+    }
+    
+    // Enhanced options for iPhone compatibility (keeping your existing config)
+    const config = {
+        maxRetries: 3,
+        retryDelay: 1000,
+        timeout: 45000,
+        forceXHR: false, // isIOS(),
+        debug: true,
+        url: glbPostRestUrl
+    };
+    
+    // Log the data being sent for debugging
+    if (config.debug) {
+        console.log('📤 JadeJSON sending data:', formData.substring(0, 500));
+    }
+    
+    let retryCount = 0;
+    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    let attemptNum = 1; // Will be updated in your retry logic
+  
+    const log = config.debug 
+        ? (...args) => console.log(`[JadeRequest]`, ...args)
+        : () => {};
+        
+    const logError = config.debug
+        ? (...args) => console.error(`[JadeRequest ERROR]`, ...args)
+        : () => {};
+    
+    // MOVED: Define xhrRequest BEFORE makeRequest so it's in scope
+    const xhrRequest = (jsonData, controller, timeoutId) => {
+        return new Promise((resolve, reject) => {
+            log('Using XMLHttpRequest for iPhone compatibility');
+            
+            const xhr = new XMLHttpRequest();
+            xhr.timeout = config.timeout;
+            
+            controller.signal.addEventListener('abort', () => {
+                xhr.abort();
+            });
+            
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    clearTimeout(timeoutId);
+                    
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        log('XHR successful!');
+                        
+                        let responseData;
+                        const contentType = xhr.getResponseHeader('content-type');
+                        
+                        try {
+                            if (contentType && contentType.includes('application/json')) {
+                                responseData = JSON.parse(xhr.responseText);
+                            } else {
+                                responseData = xhr.responseText;
+                            }
+                            resolve(responseData);
+                        } catch (parseError) {
+                            logError('JSON parse error in XHR:', parseError);
+                            logError('Response text:', xhr.responseText.substring(0, 500));
+                            reject(new Error(`JSON Parse error: ${parseError.message}`));
+                        }
+                    } else {
+                        logError(`XHR failed with status: ${xhr.status}`);
+                        reject(new Error(`Request failed: ${xhr.status} ${xhr.statusText}`));
+                    }
+                }
+            };
+            
+            xhr.ontimeout = function() {
+                logError('XHR timed out');
+                reject(new Error('Request timed out'));
+            };
+            
+            xhr.onerror = function(e) {
+                logError('XHR network error:', e);
+                reject(new Error('Network error occurred'));
+            };
+            
+            try {
+                xhr.open('POST', config.url, true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.setRequestHeader('Accept', 'application/json, text/plain, */*');
+                xhr.setRequestHeader('Cache-Control', 'no-cache');
+                xhr.setRequestHeader('X-Request-ID', `torro-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+                
+                xhr.withCredentials = true;
+                xhr.send(jsonData);
+            } catch (error) {
+                logError('XHR setup error:', error);
+                reject(error);
+            }
+        });
+    };
+    
+    // NOW makeRequest can properly access xhrRequest
+    const makeRequest = async (data, retries) => {
+        return new Promise((resolve, reject) => {
+            const jsonData = data;
+            log(`Attempt ${retries + 1}/${config.maxRetries + 1} - Sending data (${jsonData.length} chars)`);
+            
+            // Create abort controller for timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => {
+                controller.abort();
+                logError(`Request timed out after ${config.timeout}ms`);
+            }, config.timeout);
+            
+            // Use XHR for iPhone or as fallback
+            if (config.forceXHR || !('fetch' in window)) {
+                xhrRequest(jsonData, controller, timeoutId)  // Now this will work
+                    .then(resolve)
+                    .catch(error => {
+                        if (retries < config.maxRetries) {
+                            log(`Retrying in ${config.retryDelay}ms...`);
+                            setTimeout(() => {
+                                makeRequest(data, retries + 1)
+                                    .then(resolve)
+                                    .catch(reject);
+                            }, config.retryDelay);
+                        } else {
+                            reject(error);
+                        }
+                    });
+            } else {
+                // Use fetch for other browsers
+                fetch(config.url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json, text/plain, */*',
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Connection': 'close',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-Request-ID': requestId,
+                        'X-Attempt': attemptNum.toString()
+                    },
+                    body: jsonData,
+                    credentials: 'include',
+                    mode: 'cors',
+                    signal: controller.signal
+                })
+                .then(response => {
+                    clearTimeout(timeoutId);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        return response.json();
+                    } else {
+                        return response.text();
+                    }
+                })
+                .then(data => {
+                    log('Request successful!');
+                    resolve(data);
+                })
+                .catch(async (error) => {
+                    clearTimeout(timeoutId);
+                    logError('Fetch error:', error);
+                    
+                    if (retries < config.maxRetries) {
+                        // iPhone sacrifice logic
+                        if (retries === 0 && /iPhone|iPad|iPod/.test(navigator.userAgent)) {
+                            console.log('📱 Making sacrifice before retry...');
+                            try {
+                                await smartSacrificeManager.makeSacrifice(config.url);
+                            } catch (sacrificeError) {
+                                console.warn('Sacrifice failed, continuing with retry:', sacrificeError);
+                            }
+                        }
+
+                        log(`Retrying in ${config.retryDelay}ms...`);
+                        setTimeout(() => {
+                            makeRequest(data, retries + 1)
+                                .then(resolve)
+                                .catch(reject);
+                        }, config.retryDelay);
+                    } else {
+                        reject(error);
+                    }
+                });
+            }
+        });
+    };
+
+    // Return the promise from makeRequest
+    return makeRequest(formData, 0);
+}
+class iPhoneConnectionWarmer {
+    constructor() {
+        this.isWarming = false;
+        this.lastWarmupTime = 0;
+        this.warmupCooldown = 10000; // 10 seconds between warmups
+        this.isIOS = IS_IOS_DEVICE;
+    }
+    
+    async warmupConnection(url) {
+        if (!this.isIOS) {
+            console.log('📱 Not iOS - skipping warmup');
+            return true; // Always succeed on non-iOS
+        }
+        
+        const now = Date.now();
+        if (now - this.lastWarmupTime < this.warmupCooldown) {
+            console.log('📱 Warmup on cooldown - skipping');
+            return true; // Recently warmed up
+        }
+        
+        if (this.isWarming) {
+            console.log('📱 Warmup already in progress - waiting...');
+            return this.waitForWarmup();
+        }
+        
+        console.log('📱 Starting iPhone connection warmup...');
+        this.isWarming = true;
+        
+        try {
+            // Send lightweight "hello" message
+            const warmupData = JSON.stringify({
+                formName: "ConnectionWarmup",
+                systemName: "Hummer",
+                timestamp: now
+            });
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json, text/plain, */*',
+                    'Cache-Control': 'no-cache',
+                    'X-Connection-Warmup': 'true',
+                    'X-iOS-Device': 'true'
+                },
+                body: warmupData,
+                credentials: 'include',
+                signal: AbortSignal.timeout(5000) // 5 second timeout
+            });
+            
+            // Don't care about the response content - just that it completed
+            console.log(`📱 Warmup response: ${response.status}`);
+            
+            this.lastWarmupTime = now;
+            console.log('✅ iPhone connection warmup completed');
+            return true;
+            
+        } catch (error) {
+            console.log('⚠️ iPhone warmup failed (non-critical):', error.message);
+            // Don't fail the main request if warmup fails
+            return false;
+        } finally {
+            this.isWarming = false;
+        }
+    }
+    
+    async waitForWarmup() {
+        // Wait for existing warmup to complete
+        while (this.isWarming) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        return true;
+    }
+}
+
+const connectionWarmer = new iPhoneConnectionWarmer();
+
+class SmartSacrificeManager {
+    constructor() {
+        this.consecutiveSuccesses = 0;
+        this.failureThreshold = 2; // Make sacrifice after 2 consecutive successes
+        this.isIOS = IS_IOS_DEVICE;
+    }
+    
+    async checkIfSacrificeNeeded(url) {
+        if (!this.isIOS) return;
+        
+        // Based on your pattern, failures often happen after 1-2 successes
+        if (this.consecutiveSuccesses >= this.failureThreshold) {
+            console.log(`📱 ${this.consecutiveSuccesses} consecutive successes - making preemptive sacrifice`);
+            await this.makeSacrifice(url);
+            this.consecutiveSuccesses = 0;
+        }
+    }
+    
+    async makeSacrifice(url) {
+        console.log('📱 Making preemptive sacrificial request...');
+        
+        try {
+            // Make a separate, lightweight sacrifice request
+            await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Preemptive-Sacrifice': 'true'
+                },
+                body: JSON.stringify({ 
+                    formName: "SacrificeRequest",
+                    systemName: "Hummer",
+                    timestamp: Date.now()
+                }), // Different from main request
+                signal: AbortSignal.timeout(2000)
+            });
+            
+            console.log('📱 Sacrifice unexpectedly succeeded');
+        } catch (error) {
+            console.log('📱 Preemptive sacrifice completed:', error.message);
+        }
+        
+        // Small delay to let network stack settle
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
+    recordSuccess() {
+        if (this.isIOS) {
+            this.consecutiveSuccesses++;
+            console.log(`📱 Success count: ${this.consecutiveSuccesses}`);
+        }
+    }
+
+    recordFailure() {
+        if (this.isIOS) {
+            this.consecutiveSuccesses = 0;
+            console.log('📱 Failure recorded - resetting success count to 0');
+        }
+    }
+}
+
+const smartSacrificeManager = new SmartSacrificeManager();
+
+
+// Helper function to detect iOS
+function testIsIOS() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+           (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+class ActivityTimer {
+    constructor(options = {}) {
+        this.idleTimeout = options.idleTimeout || 5 * 60 * 1000; // 5 minutes
+        this.uploadInterval = options.uploadInterval || 1 * 60 * 1000; // 1 minute between uploads
+        this.onIdleCallback = options.onIdle || null;
+        
+        this.idleTimer = null;
+        this.isUploading = false;
+    }
+    
+    // Call this method whenever there's user activity or AJAX calls
+    resetTimer() {
+        if (this.idleTimer) {
+            clearTimeout(this.idleTimer);
+        }
+        
+        // Don't start new timer if already uploading
+        if (this.isUploading) {
+            return;
+        }
+        
+        this.idleTimer = setTimeout(() => {
+            if (this.onIdleCallback) {
+                this.onIdleCallback();
+            }
+        }, this.idleTimeout);
+        
+    //    console.log(`Activity detected. Timer reset for ${this.idleTimeout / 1000} seconds.`);
+    }
+    
+    setUploading(isUploading) {
+        this.isUploading = isUploading;
+        if (!isUploading) {
+            this.resetTimer(); // Resume timer when uploading is done
+        }
+    }
+    
+    stop() {
+        if (this.idleTimer) {
+            clearTimeout(this.idleTimer);
+            this.idleTimer = null;
+        }
+    }
+}
+
+
+
+
+class ConnectionMonitor {
+    constructor() {
+        this.isOnline = navigator.onLine;
+        this.setupEventListeners();
+    }
+    
+    setupEventListeners() {
+        window.addEventListener('online', () => {
+     //       console.log('📶 Connection restored');
+            this.isOnline = true;
+        });
+        
+        window.addEventListener('offline', () => {
+      //      console.log('📵 Connection lost');
+            this.isOnline = false;
+        });
+    }
+    
+    async waitForConnection(maxWait = 30000) {
+        if (this.isOnline) return true;
+        
+       // console.log('⏳ Waiting for connection...');
+        
+        return new Promise((resolve) => {
+            const timeout = setTimeout(() => {
+                resolve(false);
+            }, maxWait);
+            
+            const checkConnection = () => {
+                if (navigator.onLine) {
+                    clearTimeout(timeout);
+                    window.removeEventListener('online', checkConnection);
+                    resolve(true);
+                }
+            };
+            
+            window.addEventListener('online', checkConnection);
+        });
+    }
+}
+
+const connectionMonitor = new ConnectionMonitor();
+
+// Use before making requests
+async function uploadWithConnectionCheck(phoneImageId) {
+    if (!connectionMonitor.isOnline) {
+        const connected = await connectionMonitor.waitForConnection();
+        if (!connected) {
+            throw new Error('No internet connection available');
+        }
+    }
+    
+    return await uploadImageToServer(phoneImageId);
+}
 
 
 function generateRandomString(length = 20) {
@@ -2134,719 +2619,10 @@ function compressImage(file, options = {}) {
 }
 
 
-class FloatingPDFManager {
-  constructor() {
-    // Set up PDF.js worker
-    if (typeof pdfjsLib !== 'undefined') {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    }
-    this.currentPDF = null;
-    this.currentCanvas = null;
-    this.currentContext = null;
-    this.currentPage = 1;
-    this.floatingContainer = null;
-    this.lastPDFData = null; // Store last opened PDF data
-    this.lastFileName = null; // Store last opened filename
-    
-    // Drag functionality properties
-    this.isDragging = false;
-    this.dragStartX = 0;
-    this.dragStartY = 0;
-    this.containerStartX = 0;
-    this.containerStartY = 0;
-  }
-
-  // Convert base64 to blob
-  base64ToBlob(base64Data, contentType = 'application/pdf') {
-    const base64 = base64Data.replace(/^data:application\/pdf;base64,/, '');
-    const byteCharacters = atob(base64);
-    const byteNumbers = new Array(byteCharacters.length);
-    
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    
-    const byteArray = new Uint8Array(byteNumbers);
-    return new Blob([byteArray], { type: contentType });
-  }
-
-  // Cache PDF using OPFS
-  async cachePDFFromBase64(base64Data, fileName) {
-    try {
-      const pdfBlob = this.base64ToBlob(base64Data);
-      const opfsRoot = await navigator.storage.getDirectory();
-      const fileHandle = await opfsRoot.getFileHandle(fileName, { create: true });
-      const writable = await fileHandle.createWritable();
-      await writable.write(pdfBlob);
-      await writable.close();
-      return fileName;
-    } catch (error) {
-      console.error('Error caching PDF:', error);
-      return null;
-    }
-  }
-
-  // Get cached PDF
-  async getCachedPDF(fileName) {
-    try {
-      const opfsRoot = await navigator.storage.getDirectory();
-      const fileHandle = await opfsRoot.getFileHandle(fileName);
-      const file = await fileHandle.getFile();
-      return URL.createObjectURL(file);
-    } catch {
-      return null;
-    }
-  }
-
-  // Create floating container
-  createFloatingContainer() {
-    // Remove existing container if it exists
-    if (this.floatingContainer) {
-      this.floatingContainer.remove();
-    }
-
-    // Create modal overlay
-    const overlay = document.createElement('div');
-    overlay.className = 'pdf-modal-overlay';
-    overlay.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.7);
-      z-index: 10000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    `;
-
-    // Create floating container
-    const container = document.createElement('div');
-    container.className = 'pdf-floating-container';
-    container.style.cssText = `
-      width: 90%;
-      height: 90%;
-      max-width: 1200px;
-      max-height: 900px;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) scale(0.8);
-      display: flex;
-      flex-direction: column;
-      transition: transform 0.3s ease;
-      overflow: hidden;
-      min-width: 300px;
-      min-height: 200px;
-    `;
-
-    // Create header with close button
-    const header = document.createElement('div');
-    header.style.cssText = `
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 15px 20px;
-      background: #f8f9fa;
-      border-bottom: 1px solid #e9ecef;
-      cursor: move;
-      user-select: none;
-    `;
-
-    // Add drag functionality to header
-    this.setupDragFunctionality(header, container);
-
-    const title = document.createElement('h3');
-    title.textContent = 'PDF Viewer';
-    title.style.cssText = `
-      margin: 0;
-      color: #333;
-      font-size: 18px;
-    `;
-
-    const closeButton = document.createElement('button');
-    closeButton.innerHTML = '×';
-    closeButton.style.cssText = `
-      background: none;
-      border: none;
-      font-size: 24px;
-      color: #666;
-      cursor: pointer;
-      padding: 0;
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background-color 0.2s;
-      margin-left: 10px;
-    `;
-
-    closeButton.onmouseover = () => {
-      closeButton.style.backgroundColor = '#f0f0f0';
-    };
-    closeButton.onmouseout = () => {
-      closeButton.style.backgroundColor = 'transparent';
-    };
-
-    closeButton.onclick = () => this.closeFloatingPDF();
-
-    // Add minimize button
-    const minimizeButton = document.createElement('button');
-    minimizeButton.innerHTML = '−';
-    minimizeButton.style.cssText = `
-      background: none;
-      border: none;
-      font-size: 24px;
-      color: #666;
-      cursor: pointer;
-      padding: 0;
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background-color 0.2s;
-    `;
-
-    minimizeButton.onmouseover = () => {
-      minimizeButton.style.backgroundColor = '#f0f0f0';
-    };
-    minimizeButton.onmouseout = () => {
-      minimizeButton.style.backgroundColor = 'transparent';
-    };
-
-    minimizeButton.onclick = () => this.minimizeFloatingPDF();
-
-    const buttonContainer = document.createElement('div');
-    buttonContainer.style.cssText = `
-      display: flex;
-      align-items: center;
-    `;
-    
-    buttonContainer.appendChild(minimizeButton);
-    buttonContainer.appendChild(closeButton);
-
-    header.appendChild(title);
-    header.appendChild(buttonContainer);
-
-    // Create content area
-    const contentArea = document.createElement('div');
-    contentArea.id = 'pdf-content-area';
-    contentArea.style.cssText = `
-      flex: 1;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    `;
-
-    container.appendChild(header);
-    container.appendChild(contentArea);
-    overlay.appendChild(container);
-
-    // Click outside to close
-    overlay.onclick = (e) => {
-      if (e.target === overlay) {
-        this.closeFloatingPDF();
-      }
-    };
-
-    // Escape key to close
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.floatingContainer) {
-        this.closeFloatingPDF();
-      }
-    });
-
-    document.body.appendChild(overlay);
-    this.floatingContainer = overlay;
-
-    // Animate in
-    setTimeout(() => {
-      overlay.style.opacity = '1';
-      container.style.transform = 'translate(-50%, -50%) scale(1)';
-    }, 10);
-
-    return contentArea;
-  }
-
-  // Setup drag functionality
-  setupDragFunctionality(header, container) {
-    header.addEventListener('mousedown', (e) => {
-      // Don't drag if clicking on buttons
-      if (e.target.tagName === 'BUTTON') return;
-      
-      this.isDragging = true;
-      this.dragStartX = e.clientX;
-      this.dragStartY = e.clientY;
-      
-      // Get current position
-      const rect = container.getBoundingClientRect();
-      this.containerStartX = rect.left + rect.width / 2;
-      this.containerStartY = rect.top + rect.height / 2;
-      
-      // Change cursor
-      document.body.style.cursor = 'grabbing';
-      header.style.cursor = 'grabbing';
-      
-      // Prevent text selection
-      e.preventDefault();
-    });
-
-    document.addEventListener('mousemove', (e) => {
-      if (!this.isDragging) return;
-      
-      const deltaX = e.clientX - this.dragStartX;
-      const deltaY = e.clientY - this.dragStartY;
-      
-      const newX = this.containerStartX + deltaX;
-      const newY = this.containerStartY + deltaY;
-      
-      // Update position
-      container.style.left = `${newX}px`;
-      container.style.top = `${newY}px`;
-      container.style.transform = 'translate(-50%, -50%) scale(1)';
-      
-      e.preventDefault();
-    });
-
-    document.addEventListener('mouseup', () => {
-      if (this.isDragging) {
-        this.isDragging = false;
-        document.body.style.cursor = '';
-        header.style.cursor = 'move';
-      }
-    });
-
-    // Handle window resize to keep container visible
-    window.addEventListener('resize', () => {
-      if (container) {
-        this.keepContainerInBounds(container);
-      }
-    });
-  }
-
-  // Keep container within viewport bounds
-  keepContainerInBounds(container) {
-    const rect = container.getBoundingClientRect();
-    const windowWidth = window.innerWidth;
-    const windowHeight = window.innerHeight;
-    
-    let newX = parseFloat(container.style.left) || windowWidth / 2;
-    let newY = parseFloat(container.style.top) || windowHeight / 2;
-    
-    // Ensure container stays within bounds
-    const minX = rect.width / 2;
-    const maxX = windowWidth - rect.width / 2;
-    const minY = rect.height / 2;
-    const maxY = windowHeight - rect.height / 2;
-    
-    newX = Math.max(minX, Math.min(maxX, newX));
-    newY = Math.max(minY, Math.min(maxY, newY));
-    
-    container.style.left = `${newX}px`;
-    container.style.top = `${newY}px`;
-  }
-  closeFloatingPDF() {
-    if (this.floatingContainer) {
-      const overlay = this.floatingContainer;
-      const container = overlay.querySelector('.pdf-floating-container');
-      
-      // Animate out
-      overlay.style.opacity = '0';
-      container.style.transform = 'translate(-50%, -50%) scale(0.8)';
-      
-      setTimeout(() => {
-        overlay.remove();
-        this.floatingContainer = null;
-      }, 300);
-    }
-  }
-
-  // New method to minimize instead of close
-  minimizeFloatingPDF() {
-    if (this.floatingContainer) {
-      const overlay = this.floatingContainer;
-      const container = overlay.querySelector('.pdf-floating-container');
-      
-      // Hide the main container
-      overlay.style.opacity = '0';
-      container.style.transform = 'translate(-50%, -50%) scale(0.8)';
-      
-      setTimeout(() => {
-        overlay.style.display = 'none';
-        this.createMinimizedIcon();
-      }, 300);
-    }
-  }
-
-  // Create minimized icon
-  createMinimizedIcon() {
-    // Remove existing icon if present
-    const existingIcon = document.getElementById('pdf-minimized-icon');
-    if (existingIcon) {
-      existingIcon.remove();
-    }
-
-    const minimizedIcon = document.createElement('div');
-    minimizedIcon.id = 'pdf-minimized-icon';
-    minimizedIcon.style.cssText = `
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 60px;
-      height: 60px;
-      background: #007AFF;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 9999;
-      box-shadow: 0 4px 20px rgba(0, 123, 255, 0.3);
-      transition: all 0.3s ease;
-      color: white;
-      font-size: 24px;
-    `;
-    
-    minimizedIcon.innerHTML = '📄';
-    minimizedIcon.title = 'Restore PDF Viewer';
-    
-    // Hover effects
-    minimizedIcon.onmouseover = () => {
-      minimizedIcon.style.transform = 'scale(1.1)';
-      minimizedIcon.style.boxShadow = '0 6px 25px rgba(0, 123, 255, 0.4)';
-    };
-    
-    minimizedIcon.onmouseout = () => {
-      minimizedIcon.style.transform = 'scale(1)';
-      minimizedIcon.style.boxShadow = '0 4px 20px rgba(0, 123, 255, 0.3)';
-    };
-    
-    // Click to restore
-    minimizedIcon.onclick = () => this.restoreFloatingPDF();
-    
-    document.body.appendChild(minimizedIcon);
-  }
-
-  // Restore from minimized state
-  restoreFloatingPDF() {
-    const minimizedIcon = document.getElementById('pdf-minimized-icon');
-    if (minimizedIcon) {
-      minimizedIcon.remove();
-    }
-    
-    if (this.floatingContainer) {
-      const overlay = this.floatingContainer;
-      const container = overlay.querySelector('.pdf-floating-container');
-      
-      overlay.style.display = 'flex';
-      
-      setTimeout(() => {
-        overlay.style.opacity = '1';
-        container.style.transform = 'translate(-50%, -50%) scale(1)';
-      }, 10);
-    }
-  }
-
-  // Main function to open PDF with caching in floating window
-  async openPDF(base64Data, fileName) {
-    // Store the data for potential re-opening
-    this.lastPDFData = base64Data;
-    this.lastFileName = fileName;
-    
-    let pdfUrl = null;
-
-    // Try to get from cache first
-    if (fileName) {
-      // pdfUrl = await this.getCachedPDF(fileName);
-    }
-
-    if (!pdfUrl) {
-      console.log('Creating PDF from base64 data...');
-      const pdfBlob = this.base64ToBlob(base64Data);
-      pdfUrl = URL.createObjectURL(pdfBlob);
-
-      // Cache for next time (async, doesn't block opening)
-      if (fileName) {
-        this.cachePDFFromBase64(base64Data, fileName).then(() => {
-          console.log('PDF cached successfully');
-        });
-      }
-    } else {
-      console.log('Opening from cache');
-    }
-
-    // Create floating container and display PDF
-    const contentArea = this.createFloatingContainer();
-    await this.displayPDF(pdfUrl, contentArea);
-  }
-
-  // Method to reopen the last PDF
-  async reopenLastPDF() {
-    if (this.lastPDFData) {
-      await this.openFloatingPDF(this.lastPDFData, this.lastFileName);
-    } else {
-      console.log('No PDF to reopen');
-    }
-  }
-
-  // Smart PDF display with mobile detection (modified for floating)
-  async displayPDF(blobUrl, container) {
-    container.innerHTML = '';
-
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const isPDFJSAvailable = typeof pdfjsLib !== 'undefined';
-
-    if (isMobile && isPDFJSAvailable) {
-      // Use PDF.js for mobile
-      await this.displayWithPDFJS(blobUrl, container);
-    } else if (isMobile) {
-      // Fallback for mobile without PDF.js
-      this.displayMobileFallback(blobUrl, container);
-    } else {
-      // Desktop: use iframe
-      this.displayIframe(blobUrl, container);
-    }
-  }
-
-  // PDF.js implementation for mobile (modified for floating)
-  async displayWithPDFJS(blobUrl, container) {
-    try {
-      const pdf = await pdfjsLib.getDocument(blobUrl).promise;
-      
-      // Store references
-      this.currentPDF = pdf;
-      this.currentPage = 1;
-      
-      // Create container structure
-      const viewerDiv = document.createElement('div');
-      viewerDiv.style.cssText = `
-        width: 100%;
-        height: 100%;
-        background: #f5f5f5;
-        display: flex;
-        flex-direction: column;
-      `;
-      
-      // Create controls
-      const controls = this.createControls(pdf.numPages);
-      viewerDiv.appendChild(controls);
-      
-      // Create canvas container
-      const canvasContainer = document.createElement('div');
-      canvasContainer.style.cssText = `
-        flex: 1;
-        overflow: auto;
-        background: white;
-        text-align: center;
-        padding: 10px;
-      `;
-      
-      // Create canvas for rendering
-      const canvas = document.createElement('canvas');
-      canvas.style.cssText = `
-        max-width: 100%;
-        height: auto;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      `;
-      
-      this.currentCanvas = canvas;
-      this.currentContext = canvas.getContext('2d');
-      
-      canvasContainer.appendChild(canvas);
-      viewerDiv.appendChild(canvasContainer);
-      container.appendChild(viewerDiv);
-      
-      // Render first page
-      await this.renderPage(1);
-      
-    } catch (error) {
-      console.error('Error loading PDF with PDF.js:', error);
-      this.displayMobileFallback(blobUrl, container);
-    }
-  }
-
-  // Create navigation controls (updated styling for floating)
-  createControls(totalPages) {
-    const controlsDiv = document.createElement('div');
-    controlsDiv.style.cssText = `
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 15px;
-      background: #007AFF;
-      color: white;
-      flex-shrink: 0;
-    `;
-    
-    const prevBtn = document.createElement('button');
-    prevBtn.textContent = '← Previous';
-    prevBtn.style.cssText = `
-      background: rgba(255,255,255,0.2);
-      color: white;
-      border: 1px solid rgba(255,255,255,0.3);
-      padding: 8px 16px;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    `;
-    prevBtn.onclick = () => this.goToPage(this.currentPage - 1);
-    
-    const nextBtn = document.createElement('button');
-    nextBtn.textContent = 'Next →';
-    nextBtn.style.cssText = prevBtn.style.cssText;
-    nextBtn.onclick = () => this.goToPage(this.currentPage + 1);
-    
-    const pageInfo = document.createElement('span');
-    pageInfo.id = 'page-info';
-    pageInfo.textContent = `Page 1 of ${totalPages}`;
-    pageInfo.style.cssText = `
-      font-weight: bold;
-      font-size: 16px;
-    `;
-    
-    controlsDiv.appendChild(prevBtn);
-    controlsDiv.appendChild(pageInfo);
-    controlsDiv.appendChild(nextBtn);
-    
-    return controlsDiv;
-  }
-
-  // Render specific page
-  async renderPage(pageNum) {
-    if (!this.currentPDF || !this.currentCanvas) return;
-    
-    try {
-      const page = await this.currentPDF.getPage(pageNum);
-      
-      // Calculate scale for container optimization
-      const container = this.currentCanvas.parentElement;
-      const containerWidth = container.clientWidth - 20;
-      const viewport = page.getViewport({ scale: 1 });
-      const scale = Math.min(containerWidth / viewport.width, 2);
-      
-      const scaledViewport = page.getViewport({ scale });
-      
-      // Set canvas size
-      this.currentCanvas.height = scaledViewport.height;
-      this.currentCanvas.width = scaledViewport.width;
-      
-      // Render page
-      await page.render({
-        canvasContext: this.currentContext,
-        viewport: scaledViewport
-      }).promise;
-      
-      // Update page info
-      const pageInfoElement = document.getElementById('page-info');
-      if (pageInfoElement) {
-        pageInfoElement.textContent = `Page ${pageNum} of ${this.currentPDF.numPages}`;
-      }
-      
-    } catch (error) {
-      console.error('Error rendering page:', error);
-    }
-  }
-
-  // Navigate to specific page
-  async goToPage(pageNum) {
-    if (!this.currentPDF || pageNum < 1 || pageNum > this.currentPDF.numPages) {
-      return;
-    }
-    
-    this.currentPage = pageNum;
-    await this.renderPage(pageNum);
-  }
-
-  // Mobile fallback without PDF.js (updated for floating)
-  displayMobileFallback(blobUrl, container) {
-    container.innerHTML = `
-      <div style="height: 100%; display: flex; align-items: center; justify-content: center;">
-        <div style="text-align: center; padding: 20px; background: #f5f5f5; border-radius: 8px; max-width: 400px;">
-          <div style="margin-bottom: 15px;">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="#007AFF">
-              <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
-            </svg>
-          </div>
-          <h3 style="margin: 0 0 10px 0; color: #333;">PDF Document</h3>
-          <p style="margin: 0 0 20px 0; color: #666;">Tap below to open the PDF in your device's PDF viewer</p>
-          <a href="${blobUrl}" target="_blank" download="document.pdf" 
-             style="display: inline-block; padding: 12px 24px; background: #007AFF; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">
-            Open PDF
-          </a>
-        </div>
-      </div>
-    `;
-  }
-
-  // Desktop iframe display (updated for floating)
-  displayIframe(blobUrl, container) {
-    const iframe = document.createElement('iframe');
-    iframe.src = blobUrl;
-    iframe.style.cssText = `
-      width: 100%;
-      height: 100%;
-      border: none;
-      border-radius: 0 0 8px 8px;
-    `;
-    container.appendChild(iframe);
-  }
-
-  // List cached PDFs
-  async listCachedPDFs() {
-    try {
-      const opfsRoot = await navigator.storage.getDirectory();
-      const files = [];
-      for await (const [name, handle] of opfsRoot.entries()) {
-        if (name.endsWith('.pdf')) {
-          files.push(name);
-        }
-      }
-      return files;
-    } catch (error) {
-      console.error('Error listing cached PDFs:', error);
-      return [];
-    }
-  }
-
-  // Clear PDF cache
-  async clearCache() {
-    try {
-      const opfsRoot = await navigator.storage.getDirectory();
-      for await (const [name, handle] of opfsRoot.entries()) {
-        if (name.endsWith('.pdf')) {
-          await opfsRoot.removeEntry(name);
-        }
-      }
-      console.log('PDF cache cleared');
-    } catch (error) {
-      console.error('Error clearing cache:', error);
-    }
-  }
-}
-
-// Initialize the floating PDF manager
-const floatingPDFManager = new FloatingPDFManager();
-
-// Example usage:
-// When user clicks something in panel 1:
-// floatingPDFManager.openFloatingPDF(base64Data, 'document.pdf');
 
 // Initialize the floating PDF manager
 const pdfManager = new FloatingPDFManager();
 
-// Example usage:
-// When user clicks something in panel 1:
-// floatingPDFManager.openFloatingPDF(base64Data, 'document.pdf');    
 
 
 //CAMERA STUFF
@@ -2903,10 +2679,6 @@ const qualityPresets = {
     }
 };
 
-function isIOS() {
-    return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-           (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-}
 
 // Detect Safari specifically
 function isSafari() {
@@ -2989,7 +2761,7 @@ async function toggleFlash() {
         flashEnabled = !flashEnabled;
         flashToggle.classList.toggle('active', flashEnabled);
     } catch (error) {
-        console.error('Error toggling flash:', error);
+  //      console.error('Error toggling flash:', error);
     }
 }
 
@@ -3001,7 +2773,7 @@ async function toggleFlash() {
 function selectQuality(quality) {
     // Validate quality exists
     if (!qualityPresets[quality]) {
-        console.error(`Unknown quality: ${quality}`);
+  //      console.error(`Unknown quality: ${quality}`);
         quality = 'high'; // fallback
     }
     
@@ -3025,7 +2797,7 @@ function selectQuality(quality) {
     updateQualitySelector();
     updateQualityInfo();
     
-    console.log(`Quality selected: ${quality}`, imageQualitySettings);
+ //   console.log(`Quality selected: ${quality}`, imageQualitySettings);
 }
 
 // Update quality selector visual styling
@@ -3068,7 +2840,7 @@ function loadQualityPreference() {
             const settings = JSON.parse(saved);
             quality = settings.quality || 'high';
         } catch (error) {
-            console.error('Error parsing saved settings:', error);
+      //      console.error('Error parsing saved settings:', error);
         }
     }
     
@@ -3080,7 +2852,7 @@ function loadQualityPreference() {
 // Initialize image quality system
 function initializeImageQuality() {
     const quality = loadQualityPreference();
-    console.log('Image quality initialized:', imageQualitySettings);
+  //  console.log('Image quality initialized:', imageQualitySettings);
     return quality;
 }
 
@@ -3094,7 +2866,7 @@ function saveQualitySettings(quality) {
         currentSettings.quality = quality;
         localStorage.setItem('cameraSettings', JSON.stringify(currentSettings));
         
-        console.log('Quality settings saved:', quality);
+     //   console.log('Quality settings saved:', quality);
     }
 }
 
@@ -3364,11 +3136,11 @@ async function checkAndProcessPendingUploads() {
         const allPhotos = await getAllStoredPhotos();
         
         if (allPhotos.length === 0) {
-            console.log('No photos found to process');
+      //      console.log('No photos found to process');
             return;
         }
         
-        console.log(`Found ${allPhotos.length} photos to process`);
+    //    console.log(`Found ${allPhotos.length} photos to process`);
         
         let successCount = 0;
         let failCount = 0;
@@ -3384,22 +3156,22 @@ async function checkAndProcessPendingUploads() {
             }
             
             try {
-                console.log(`Processing photo: ${phoneImageId}`);
+           //     console.log(`Processing photo: ${phoneImageId}`);
                 
                 // Call your complete upload function
                 await completePhotoUpload(phoneImageId);
                 
                 successCount++;
-                console.log(`✅ Successfully processed photo: ${phoneImageId}`);
+             //   console.log(`✅ Successfully processed photo: ${phoneImageId}`);
                 
             } catch (error) {
                 failCount++;
-                console.error(`❌ Failed to process photo ${phoneImageId}:`, error);
+             //   console.error(`❌ Failed to process photo ${phoneImageId}:`, error);
                 // Continue with next photo instead of stopping the whole process
             }
         }
         
-        console.log(`Upload processing complete: ${successCount} successful, ${failCount} failed`);
+     //   console.log(`Upload processing complete: ${successCount} successful, ${failCount} failed`);
       
        
         return {
@@ -3428,7 +3200,7 @@ function getClientId() {
 
 
 function initializeCameraUI() {
-    console.log('🎛️ Setting up camera UI event listeners...');
+   // console.log('🎛️ Setting up camera UI event listeners...');
     
     const settingsOverlay = document.getElementById('settingsOverlay');
     
@@ -3467,7 +3239,7 @@ function initializeCameraUI() {
     
 
 async function initCamera() {
-    console.log('📷 Initializing camera stream...');
+  //  console.log('📷 Initializing camera stream...');
     initializeCameraUI ();
     // Load preferences
     loadQualityPreference();
@@ -3506,10 +3278,10 @@ async function initCamera() {
             audio: false
         };
         
-        console.log('🎥 Requesting camera with constraints:', constraints);
+    //    console.log('🎥 Requesting camera with constraints:', constraints);
         
         currentStream = await navigator.mediaDevices.getUserMedia(constraints);
-        console.log('✅ Camera stream obtained');
+     //   console.log('✅ Camera stream obtained');
         
         video.srcObject = currentStream;
         
@@ -3521,7 +3293,7 @@ async function initCamera() {
             
             video.onloadedmetadata = () => {
                 clearTimeout(timeout);
-                console.log('📺 Video metadata loaded');
+      //          console.log('📺 Video metadata loaded');
                 resolve();
             };
             
@@ -3533,14 +3305,14 @@ async function initCamera() {
         
         // Update video mirroring based on camera
         video.className = currentFacingMode === 'user' ? '' : 'back-camera';
-        console.log('🔄 Video class set to:', video.className);
+     //   console.log('🔄 Video class set to:', video.className);
         
         // Check for flash support
         const track = currentStream.getVideoTracks()[0];
         if (track) {
             const capabilities = track.getCapabilities();
             flashSupported = 'torch' in capabilities;
-            console.log('💡 Flash supported:', flashSupported);
+      //      console.log('💡 Flash supported:', flashSupported);
             
             if (flashToggle) {
                 flashToggle.style.display = flashSupported ? 'flex' : 'none';
@@ -3548,7 +3320,7 @@ async function initCamera() {
         }
         
         showLoading(false);
-        console.log('✅ Camera initialization complete');
+   //     console.log('✅ Camera initialization complete');
         return true;
         
     } catch (error) {
@@ -3620,7 +3392,7 @@ async function initCameraXXX() {
         
         showLoading(false);
     } catch (error) {
-        console.error('Error accessing camera:', error);
+      //  console.error('Error accessing camera:', error);
         showError('Unable to access camera. Please check permissions and try again.');
         showLoading(false);
     }
@@ -3973,10 +3745,10 @@ async function recoverDeviceIdIfNeeded() {
             deviceId = await getDeviceIdFromDB();
             if (deviceId) {
                 localStorage.setItem('deviceUniqueId', deviceId);
-                console.log('Recovered device ID from IndexedDB:', deviceId);
+         //       console.log('Recovered device ID from IndexedDB:', deviceId);
             }
         } catch (error) {
-            console.warn('Could not recover device ID from IndexedDB:', error);
+       //     console.warn('Could not recover device ID from IndexedDB:', error);
         }
     }
     
@@ -4041,6 +3813,9 @@ async function capturePhoto() {
             quality: imageQualitySettings.quality,
             mimeType: imageQualitySettings.mimeType,
             clientId: getClientId(),
+            completedChunks: [],
+            fileHandle: null, 
+            numberOfChunks: null, 
             status: 'captured',
             serverUniqueId: null,
             compressionInfo: {
@@ -4069,7 +3844,7 @@ async function capturePhoto() {
         showPhotoReview(result, phoneImageId);
         
     } catch (error) {
-        console.error('Error processing image:', error);
+       // console.error('Error processing image:', error);
         showError('Failed to process image. Please try again.');
     } finally {
         showProcessingIndicator(false);
@@ -4078,7 +3853,7 @@ async function capturePhoto() {
 
 function stopCamera() {
     if (currentStream) {
-        console.log('🔴 Stopping camera stream...');
+      //  console.log('🔴 Stopping camera stream...');
         currentStream.getTracks().forEach(track => {
             track.stop();
             console.log(`Stopped track: ${track.kind}`);
@@ -4091,7 +3866,7 @@ function stopCamera() {
             video.srcObject = null;
         }
         
-        console.log('✅ Camera stopped');
+      //  console.log('✅ Camera stopped');
     }
 }
 
@@ -4127,7 +3902,7 @@ async function compressForIOS(file, maxSize = 500000) {
 async function uploadLater() {
     const capturedPhoto = document.getElementById('capturedPhoto');
     showProcessingOverlay('Saving Photo...');
-    stopCamera();
+    
     if (!capturedPhoto.phoneImageId) return;
     
     try {
@@ -4154,7 +3929,7 @@ async function uploadLater() {
         submitForm(f);
 
     } catch (error) {
-        console.error('Failed to register photo:', error);
+       // console.error('Failed to register photo:', error);
         showSuccessMessage('Photo saved locally. Will register with server when connection is available.');
         retakePhoto();
         
@@ -4178,15 +3953,8 @@ async function uploadImageToServer(phoneImageId) {
 
         // Check if photo has file handle
         if (!photoData.metadata.fileHandle) {
-            console.log(`❌ Photo ${phoneImageId} has no file handle - deleting it`);
-            
-            // Delete the photo without file handle
+       //     console.log(`❌ Photo ${phoneImageId} has no file handle - deleting it`);
             await photoStorage.deletePhoto(phoneImageId);
-            
-            // Optionally show notification
-            showFooterNotification(`Photo ${phoneImageId} deleted (no file handle)`);
-            
-            // Return early - no upload needed
             return { 
                 success: false, 
                 deleted: true, 
@@ -4194,25 +3962,58 @@ async function uploadImageToServer(phoneImageId) {
             };
         }
 
-        // Continue with normal upload process
-        const { fileHandle, numberOfChunks } = photoData.metadata;
+        const { fileHandle, numberOfChunks, completedChunks = [] } = photoData.metadata;
         const fileToUpload = photoData.imageBlob;
         
-        console.log(`Starting upload: ${numberOfChunks} chunks for ${fileToUpload.size} bytes`);
+     //   console.log(`Starting upload: ${numberOfChunks} chunks for ${fileToUpload.size} bytes`);
+      //  console.log(`Previously completed chunks: [${completedChunks.join(', ')}]`);
         
-        // Upload chunks
+        // Determine which chunks still need to be uploaded
+        const remainingChunks = [];
+        for (let i = 1; i <= numberOfChunks; i++) {
+            if (!completedChunks.includes(i)) {
+                remainingChunks.push(i);
+            }
+        }
+        
+        if (remainingChunks.length === 0) {
+      //      console.log('✅ All chunks already uploaded, marking as complete');
+            await photoStorage.deletePhoto(phoneImageId);
+            return { success: true, fileHandle };
+        }
+        
+       // console.log(`📊 Need to upload ${remainingChunks.length} remaining chunks: [${remainingChunks.join(', ')}]`);
+        
+        // Upload only the remaining chunks
         let lByteIndex = 0;
         let lChunkStatus = null;
         
         for (let lChunkNumber = 1; lChunkNumber <= numberOfChunks; lChunkNumber++) {
             const lByteEnd = Math.ceil((fileToUpload.size / numberOfChunks) * lChunkNumber);
+            
+            // Skip chunks that are already completed
+            if (completedChunks.includes(lChunkNumber)) {
+                console.log(`⏭️ Skipping already completed chunk ${lChunkNumber}`);
+                lByteIndex += (lByteEnd - lByteIndex);
+                continue;
+            }
+            
             const lChunk = fileToUpload.slice(lByteIndex, lByteEnd);
             
-            console.log(`Uploading chunk ${lChunkNumber}/${numberOfChunks} (${lChunk.size} bytes)`);
+       //     console.log(`Uploading chunk ${lChunkNumber}/${numberOfChunks} (${lChunk.size} bytes)`);
             
             try {
                 const chunkDataURL = await readChunkAsDataURL(lChunk);
-                const chunkResponse = await sendChunkToServer(fileHandle, lChunkNumber, numberOfChunks, chunkDataURL);
+                
+                // Pass phoneImageId so chunk progress can be updated
+                const chunkResponse = await sendChunkToServerWithRetry(
+                    fileHandle, 
+                    lChunkNumber, 
+                    numberOfChunks, 
+                    chunkDataURL,
+                    5, // maxRetries
+                    phoneImageId // Pass phoneImageId for progress tracking
+                );
                 
                 let lJadeData;
                 if (typeof chunkResponse === 'string') {
@@ -4228,7 +4029,18 @@ async function uploadImageToServer(phoneImageId) {
                         throw new Error(`Server error on chunk ${lChunkNumber}: ${lJadeData.error || 'Unknown error'}`);
                     }
                     
-                    // Update progress
+                    // Handle your specific JSON format for chunk confirmation
+                    if (lChunkStatus === "Done" && lJadeData.chunk) {
+                        const serverChunkNumber = parseInt(lJadeData.chunk);
+                 //       console.log(`✅ Server confirmed chunk ${serverChunkNumber} completed`);
+                        
+                        // Verify chunk number matches
+                        if (serverChunkNumber !== lChunkNumber) {
+                   //         console.warn(`⚠️ Chunk mismatch: sent ${lChunkNumber}, server confirmed ${serverChunkNumber}`);
+                        }
+                    }
+                    
+                    // Update progress display
                     const progressPercent = Math.round((lChunkNumber / numberOfChunks) * 100);
                     updateUploadProgress(`photo-${phoneImageId}.jpg`, progressPercent);
                 }
@@ -4236,15 +4048,15 @@ async function uploadImageToServer(phoneImageId) {
                 lByteIndex += (lByteEnd - lByteIndex);
                 
             } catch (chunkError) {
-                console.error(`Error uploading chunk ${lChunkNumber}:`, chunkError);
+            //    console.error(`Error uploading chunk ${lChunkNumber}:`, chunkError);
                 throw new Error(`Failed to upload chunk ${lChunkNumber}: ${chunkError.message}`);
             }
         }
         
-        console.log(`All chunks sent. Final status: ${lChunkStatus}`);
+       // console.log(`All chunks sent. Final status: ${lChunkStatus}`);
         
         if (lChunkStatus === "Complete") {
-            console.log('Upload completed successfully, deleting from storage');
+        //    console.log('Upload completed successfully, deleting from storage');
             await photoStorage.deletePhoto(phoneImageId);
         }
         
@@ -4264,6 +4076,28 @@ async function uploadImageToServer(phoneImageId) {
     }
 }
 
+async function getChunkResumeInfo(phoneImageId) {
+    try {
+        const photoData = await getPhotoByPhoneId(phoneImageId);
+        if (!photoData || !photoData.metadata) {
+            return null;
+        }
+        
+        const { completedChunks = [], totalChunks, lastCompletedChunk = 0 } = photoData.metadata;
+        
+        return {
+            completedChunks,
+            totalChunks,
+            lastCompletedChunk,
+            nextChunk: lastCompletedChunk + 1,
+            remainingChunks: totalChunks - completedChunks.length,
+            progress: Math.round((completedChunks.length / totalChunks) * 100)
+        };
+    } catch (error) {
+    //    console.error('Error getting chunk resume info:', error);
+        return null;
+    }
+}
 
 // Safe error handling function
 async function registerPhotoWithServer(phoneImageId) {
@@ -4282,7 +4116,7 @@ async function registerPhotoWithServer(phoneImageId) {
         }
 
        
-        console.log('Retrieved photoData:', existingPhoto);
+    //    console.log('Retrieved photoData:', existingPhoto);
         
         if (!existingPhoto) {
             throw new Error('Photo not found in IndexedDB');
@@ -4308,10 +4142,10 @@ async function registerPhotoWithServer(phoneImageId) {
         };
 
         const lJson = JSON.stringify(payload);
-        console.log('Sending payload:', lJson);
+   //     console.log('Sending payload:', lJson);
 
         // Make server request
-        const response = await JadeRestRequest(lJson);
+        const response = await queuedJadeRestRequest(lJson, false);
         
         let lResponse;
         if (glbReponseEncoded) {
@@ -4319,9 +4153,9 @@ async function registerPhotoWithServer(phoneImageId) {
         } else {
             lResponse = response;
         }
-        console.log('The Response', lResponse );
+    //    console.log('The Response', lResponse );
         const serverData = JSON.parse(lResponse);
-        console.log ('Server Data', serverData);
+    //    console.log ('Server Data', serverData);
         if (Object.keys(serverData).length > 0 && serverData.fileHandle) {
             // Set global variables for backward compatibility
             lJadeData = serverData;
@@ -4329,11 +4163,11 @@ async function registerPhotoWithServer(phoneImageId) {
             lBlockSize = serverData.blockSize;
             lNumberOfChunks = Math.ceil(size / lBlockSize);
             
-            console.log('Registration successful:', {
-                fileHandle: lFileHandle,
-                blockSize: lBlockSize,
-                numberOfChunks: lNumberOfChunks
-            });
+     //       console.log('Registration successful:', {
+      //          fileHandle: lFileHandle,
+      //          blockSize: lBlockSize,
+       ////         numberOfChunks: lNumberOfChunks
+       //     });
 
             // CRITICAL: Save the fileHandle and upload info back to IndexedDB
             await updatePhotoWithUploadInfo(phoneImageId, {
@@ -4416,6 +4250,198 @@ async function convertStoredImageToBlob(storedRecord) {
 }
 
 
+async function sendChunkToServerWithRetry(fileHandle, chunkIndex, numChunks, chunkDataURL, maxRetries = 5, phoneImageId = null) {
+    let lastError = null;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            console.log(`📤 Attempt ${attempt}/${maxRetries} - Sending chunk ${chunkIndex}/${numChunks}`);
+            
+            // Pass phoneImageId to the single chunk function
+            const result = await sendChunkToServerSingle(fileHandle, chunkIndex, numChunks, chunkDataURL, attempt, phoneImageId);
+            console.log(`✅ Chunk ${chunkIndex} sent successfully on attempt ${attempt}`);
+            return result;
+            
+        } catch (error) {
+            lastError = error;
+            console.warn(`⚠️ Chunk ${chunkIndex} attempt ${attempt} failed:`, error.message);
+            
+            if (isNonRetryableError(error)) {
+                console.error(`❌ Non-retryable error for chunk ${chunkIndex}:`, error.message);
+                throw error;
+            }
+            
+            if (attempt < maxRetries) {
+                // Increased retry delays: 5s, 10s, 20s, 30s
+                const baseDelay = 5000; // Start with 5 seconds instead of 1 second
+                const delay = Math.min(baseDelay * Math.pow(2, attempt - 1), 30000); // Max 30 seconds
+                console.log(`⏳ Waiting ${delay / 1000} seconds before retry attempt ${attempt + 1}...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+    }
+    
+    console.error(`❌ Chunk ${chunkIndex} failed after ${maxRetries} attempts`);
+    throw lastError;
+}
+
+async function sendChunkToServerSingle(fileHandle, chunkIndex, numChunks, chunkDataURL, attempt = 1, phoneImageId = null) {
+    const payload = {
+        systemName: glbSystemName,
+        formName: "FileChunkSave",
+        vin: Conversions.base32.encode(fileHandle),
+        doc: chunkDataURL,
+        ck: chunkIndex.toString(),
+        ct: numChunks.toString(),  
+        sid: Conversions.base32.encode(glb_sid),
+        rid: generateRandomString()
+    };
+    
+  //  console.log(`📤 Sending chunk ${chunkIndex}/${numChunks} (attempt ${attempt})`);
+    
+    try {
+        // **IMPORTANT**: Use skipTimerReset = true for chunk uploads
+        const response = await queuedJadeRestRequest(JSON.stringify(payload),true); // <- This true parameter skips timer reset
+        
+        let result;
+        
+        if (!response) {
+            throw new Error('Empty response from server');
+        }
+        
+        if (glbReponseEncoded) {
+            try {
+                const decodedResponse = atob(response);
+                if (!decodedResponse || decodedResponse.trim() === '') {
+                    throw new Error('Empty decoded response');
+                }
+                result = JSON.parse(decodedResponse);
+            } catch (decodeError) {
+                console.error('Decode error:', decodeError);
+                throw new Error(`Failed to decode server response: ${decodeError.message}`);
+            }
+        } else {
+            if (typeof response === 'string') {
+                if (response.trim() === '') {
+                    throw new Error('Empty string response');
+                }
+                try {
+                    result = JSON.parse(response);
+                } catch (parseError) {
+                    console.error('JSON parse error:', parseError);
+                    throw new Error(`Invalid JSON response: ${parseError.message}`);
+                }
+            } else {
+                result = response;
+            }
+        }
+        
+        if (!result || typeof result !== 'object') {
+            throw new Error('Invalid response format - not an object');
+        }
+        
+     //   console.log(`✅ Chunk ${chunkIndex} server response:`, result);
+        
+        // **NEW**: Check if server confirms chunk completion and update IndexedDB
+        // Handle your specific JSON format: {"status": "Done", "chunk": "3"}
+        if (result.status === "Done" && result.chunk) {
+            const serverChunkNumber = parseInt(result.chunk);
+     //       console.log(`✅ Server confirmed chunk ${serverChunkNumber} completed (expected: ${chunkIndex})`);
+            
+            // Verify the chunk number matches what we sent
+            if (serverChunkNumber === chunkIndex) {
+                // Update chunk progress in IndexedDB if phoneImageId is provided
+                if (phoneImageId) {
+                    await updateChunkProgress(phoneImageId, chunkIndex, numChunks);
+                }
+            } else {
+       //         console.warn(`⚠️ Chunk number mismatch: sent ${chunkIndex}, server confirmed ${serverChunkNumber}`);
+            }
+        } else if (result.status === "Complete") {
+            // Handle final completion status
+      //      console.log(`🎉 Server confirmed upload complete`);
+            if (phoneImageId) {
+                await updateChunkProgress(phoneImageId, chunkIndex, numChunks, true); // Mark as final chunk
+            }
+        }
+        
+        return result;
+        
+    } catch (error) {
+    //    console.error(`❌ Error sending chunk ${chunkIndex}:`, error);
+        throw new Error(`Upload failed for chunk ${chunkIndex}: ${error.message}`);
+    }
+}
+async function updateChunkProgress(phoneImageId, completedChunkNumber, totalChunks, isFinalChunk = false) {
+    try {
+        // Get current photo data
+        const photoData = await getPhotoByPhoneId(phoneImageId);
+        if (!photoData) {
+       //     console.warn(`Photo ${phoneImageId} not found for chunk progress update`);
+            return;
+        }
+        
+        // Get existing completed chunks or initialize empty array
+        const existingChunks = photoData.metadata?.completedChunks || [];
+        
+        // Add the completed chunk number if it's not already in the array
+        if (!existingChunks.includes(completedChunkNumber)) {
+            existingChunks.push(completedChunkNumber);
+            existingChunks.sort((a, b) => a - b); // Keep sorted
+        }
+        
+        const progress = Math.round((existingChunks.length / totalChunks) * 100);
+        const allChunksComplete = existingChunks.length >= totalChunks || isFinalChunk;
+        
+        // Update the photo record with chunk progress
+        const updateData = {
+            completedChunks: existingChunks,
+            totalChunks: totalChunks,
+            lastCompletedChunk: completedChunkNumber,
+            uploadProgress: progress,
+            lastChunkCompletedAt: new Date().toISOString()
+        };
+        
+        // Set status based on completion
+        if (allChunksComplete) {
+            updateData.uploadStatus = 'chunks_complete';
+            updateData.allChunksCompletedAt = new Date().toISOString();
+      //      console.log(`🎉 All chunks completed for ${phoneImageId}!`);
+        } else {
+            updateData.uploadStatus = 'uploading_chunks';
+        }
+        
+        await updatePhotoWithUploadInfo(phoneImageId, updateData);
+        
+     //   console.log(`📊 Chunk progress updated for ${phoneImageId}: ${existingChunks.length}/${totalChunks} chunks (${progress}%)`);
+     //   console.log(`📋 Completed chunks: [${existingChunks.join(', ')}]`);
+        
+        // Show progress in footer if this is a foreground upload
+        if (typeof updateUploadProgress === 'function') {
+            updateUploadProgress(`photo-${phoneImageId}.jpg`, progress);
+        }
+        
+    } catch (error) {
+        console.error('Error updating chunk progress:', error);
+        // Don't throw - this is just progress tracking
+    }
+}
+
+function isNonRetryableError(error) {
+    // Don't retry on these error types
+    const nonRetryableErrors = [
+        'Authentication failed',
+        'Invalid file handle',
+        'File too large',
+        'Quota exceeded'
+    ];
+    
+    return nonRetryableErrors.some(msg => 
+        error.message && error.message.includes(msg)
+    );
+}
+
+
 
 // Fixed sendChunkToServer function with better error handling
 async function sendChunkToServer(fileHandle, chunkIndex, numChunks, chunkDataURL) {
@@ -4430,10 +4456,10 @@ async function sendChunkToServer(fileHandle, chunkIndex, numChunks, chunkDataURL
         rid: generateRandomString()
     };
     
-    console.log(`Sending chunk ${chunkIndex}/${numChunks} with payload keys:`, Object.keys(payload));
+   // console.log(`Sending chunk ${chunkIndex}/${numChunks} with payload keys:`, Object.keys(payload));
     
     try {
-        const response = await JadeRestRequest(JSON.stringify(payload));
+        const response = await queuedJadeRestRequest(JSON.stringify(payload), true);
         
         let result;
         if (glbReponseEncoded) {
@@ -4446,13 +4472,13 @@ async function sendChunkToServer(fileHandle, chunkIndex, numChunks, chunkDataURL
                 result = response;
             }
         }
-         console.log('The Response', result );
+     //    console.log('The Response', result );
         
-        console.log(`Chunk ${chunkIndex} server response:`, result);
+     //   console.log(`Chunk ${chunkIndex} server response:`, result);
         return result;
         
     } catch (error) {
-        console.error(`Error sending chunk ${chunkIndex}:`, error);
+    //    console.error(`Error sending chunk ${chunkIndex}:`, error);
         throw new Error(`Network error sending chunk ${chunkIndex}: ${error.message}`);
     }
 }
@@ -4463,7 +4489,7 @@ function readChunkAsDataURL(chunk) {
         const reader = new FileReader();
         reader.onloadend = () => resolve(reader.result);
         reader.onerror = (error) => {
-            console.log('Chunk read error:', error);
+       //     console.log('Chunk read error:', error);
             reject(error);
         };
         reader.readAsDataURL(chunk);
@@ -4513,20 +4539,19 @@ async function completePhotoUpload(phoneImageId) {
        
         await uploadImageToServer(phoneImageId);
         
-        console.log('Complete upload workflow finished successfully!');
+     //   console.log('Complete upload workflow finished successfully!');
         return { success: true };
         
     } catch (error) {
-        console.error('Complete upload workflow failed:', error);
+      //  console.error('Complete upload workflow failed:', error);
         throw error;
     }
 }
 
 
-// Modified upload now function that uses your existing submitFile_DestinationHandle
 async function uploadNow() {
     showProcessingOverlay('Uploading Photo to Server...');
-    stopCamera();
+   
     const capturedPhoto = document.getElementById('capturedPhoto');
     if (!capturedPhoto.phoneImageId) return;
 
@@ -4540,6 +4565,9 @@ async function uploadNow() {
         if (!photoData) {
             throw new Error('Photo not found in local storage');
         }
+        
+        // Store the phoneImageId for cleanup after upload
+        const phoneImageIdToDelete = photoData.phoneImageId;
         
         // Create File object and set global fileToUpload variable for your existing system
         window.fileToUpload = new File([photoData.imageBlob], `photo-${photoData.phoneImageId}.jpg`, {
@@ -4559,10 +4587,16 @@ async function uploadNow() {
         window.uploadOnSuccess = async function(serverResponse) {
             try {
                 // Your existing system completed successfully
-                // Update photo status to uploaded
-                await updatePhotoStatus(photoData.phoneImageId, 'uploaded');
+           //     console.log(`✅ Upload Now completed successfully for ${phoneImageIdToDelete}`);
                 
-                showSuccessMessage('📸 Photo uploaded successfully!');
+                // **DELETE IMAGE**: Remove from local storage since Upload Now was chosen
+                await deletePhotoFromLocalStorage(phoneImageIdToDelete);
+          //      console.log(`🗑️ Photo ${phoneImageIdToDelete} deleted from local storage (Upload Now)`);
+                
+                // Update the stored images count
+                await checkForStoredImages();
+                
+                showSuccessMessage('📸 Photo uploaded and removed from storage!');
                 hidePhotoReview();
                 
                 // Restore original callbacks
@@ -4570,8 +4604,8 @@ async function uploadNow() {
                 window.uploadOnError = originalOnError;
                 
             } catch (error) {
-                console.error('Error updating photo status:', error);
-                showSuccessMessage('📸 Photo uploaded (status update failed)');
+          //      console.error('Error deleting photo after successful upload:', error);
+                showSuccessMessage('📸 Photo uploaded successfully! (cleanup failed)');
                 hidePhotoReview();
             } finally {
                 uploadNowBtn.disabled = false;
@@ -4583,6 +4617,9 @@ async function uploadNow() {
         window.uploadOnError = function(error) {
             console.error('Upload failed:', error);
             showError(`Upload failed: ${error}`);
+            
+            // Don't delete photo on failure - keep it for retry
+         //   console.log(`📷 Photo ${phoneImageIdToDelete} kept in storage due to upload failure`);
             
             // Restore original callbacks
             window.uploadOnSuccess = originalOnSuccess;
@@ -4597,18 +4634,17 @@ async function uploadNow() {
         submitFile_DestinationHandle();
         
     } catch (error) {
-        console.error('Upload preparation failed:', error);
+     //   console.error('Upload preparation failed:', error);
         
-       
+        // Fallback to uploadLater if preparation fails
+      //  console.log('Falling back to Upload Later due to preparation error');
         await uploadLater();
-       
         
         uploadNowBtn.disabled = false;
         uploadLaterBtn.disabled = false;
         uploadNowBtn.textContent = 'Upload Now';
     }
 }
-
 
 
 // Helper function to convert blob to array buffer
@@ -4657,23 +4693,23 @@ function toggleSettings() {
         
         // Apply changes
         if (changes.camera) {
-            console.log(`Camera changed from ${tempSettings.camera} to ${currentCamera}`);
+       //     console.log(`Camera changed from ${tempSettings.camera} to ${currentCamera}`);
             switchCamera(currentCamera);
         }
         
          if (changes.upload) {
-            console.log(`Upload changed from ${tempSettings.upload} to ${currentUpload}`);
+        //    console.log(`Upload changed from ${tempSettings.upload} to ${currentUpload}`);
           //Need to Upload Files   
         }
 
 
         if (changes.flash) {
-            console.log(`Flash changed from ${tempSettings.flash} to ${currentFlash}`);
+         //   console.log(`Flash changed from ${tempSettings.flash} to ${currentFlash}`);
             updateFlashSetting(currentFlash);
         }
         
         if (changes.quality) {
-            console.log(`Quality changed from ${tempSettings.quality} to ${currentQuality}`);
+        //    console.log(`Quality changed from ${tempSettings.quality} to ${currentQuality}`);
             selectQuality(currentQuality);
         }
         
@@ -4703,7 +4739,7 @@ function toggleSettings() {
         tempSettings.camera = document.querySelector('input[name="camera"]:checked').value;
         tempSettings.quality = document.querySelector('input[name="quality"]:checked').value;
        
-        console.log('Settings opened, current values:', tempSettings);
+        //console.log('Settings opened, current values:', tempSettings);
         
         // Open overlay
         overlay.classList.add('active');
@@ -4722,11 +4758,11 @@ function saveSettings(settings) {
     }
     
     localStorage.setItem('cameraSettings', JSON.stringify(settings));
-    console.log('All settings saved:', settings);
+  //  console.log('All settings saved:', settings);
 }
 
 function initializeSettingsOnOpen() {
-    console.log('Initializing settings in overlay...');
+  //  console.log('Initializing settings in overlay...');
     
     // Load saved settings
     const saved = localStorage.getItem('cameraSettings');
@@ -4735,14 +4771,14 @@ function initializeSettingsOnOpen() {
     if (saved) {
         try {
             settings = JSON.parse(saved);
-            console.log('Loaded saved settings:', settings);
+    //        console.log('Loaded saved settings:', settings);
         } catch (error) {
-            console.error('Error parsing saved settings:', error);
+      //      console.error('Error parsing saved settings:', error);
             settings = getDefaultSettings();
         }
     } else {
         settings = getDefaultSettings();
-        console.log('Using default settings:', settings);
+    //    console.log('Using default settings:', settings);
     }
     
     // Apply settings to form elements
@@ -4800,7 +4836,7 @@ function initializeSettingsListeners() {
             const value = this.value;
             if (qualityValue) qualityValue.textContent = value;
             window.imageQuality = value;
-            console.log('Quality changed to:', value);
+   //         console.log('Quality changed to:', value);
         });
     }
 
@@ -4848,10 +4884,10 @@ function initializeSettingsListeners() {
                 }
                 
                 alert('All files have been deleted successfully.');
-                console.log('All IndexedDB files deleted');
+        //        console.log('All IndexedDB files deleted');
                 
             } catch (error) {
-                console.error('Error deleting files:', error);
+        //        console.error('Error deleting files:', error);
                 alert('Error deleting files. Please try again.');
             }
         }
@@ -4862,17 +4898,17 @@ function initializeSettingsListeners() {
                 const deleteRequest = indexedDB.deleteDatabase(dbName);
                 
                 deleteRequest.onerror = () => {
-                    console.error(`Error deleting database ${dbName}:`, deleteRequest.error);
+          //          console.error(`Error deleting database ${dbName}:`, deleteRequest.error);
                     reject(deleteRequest.error);
                 };
                 
                 deleteRequest.onsuccess = () => {
-                    console.log(`Database ${dbName} deleted successfully`);
+          //          console.log(`Database ${dbName} deleted successfully`);
                     resolve();
                 };
                 
                 deleteRequest.onblocked = () => {
-                    console.warn(`Delete blocked for database ${dbName}. Close other tabs using this database.`);
+           //         console.warn(`Delete blocked for database ${dbName}. Close other tabs using this database.`);
                     // Still resolve as the delete will complete when unblocked
                     resolve();
                 };
@@ -4891,7 +4927,7 @@ function initializeSettingsListeners() {
                     const clearRequest = store.clear();
                     
                     clearRequest.onsuccess = () => {
-                        console.log(`All records cleared from ${storeName}`);
+              //          console.log(`All records cleared from ${storeName}`);
                         resolve();
                     };
                     
@@ -4926,7 +4962,7 @@ document.querySelectorAll('.sa-menu-item').forEach(item => {
     item.addEventListener('click', function(e) {
         e.preventDefault();
         toggleSAMenu();
-        console.log('Navigate to:', this.textContent);
+     //   console.log('Navigate to:', this.textContent);
     });
 });
 
@@ -4934,7 +4970,7 @@ document.querySelectorAll('.details-menu-item').forEach(item => {
     item.addEventListener('click', function(e) {
         e.preventDefault();
         toggleDetailsMenu();
-        console.log('Open tool:', this.textContent);
+     //   console.log('Open tool:', this.textContent);
     });
 });
 
@@ -5211,20 +5247,20 @@ async function UploadStoredImages() {
     try {
         // Show processing overlay
         showProcessingOverlay('Processing stored images...');
-        console.log('✅ Processing overlay shown');
+     //   console.log('✅ Processing overlay shown');
         
         // Use your existing upload method
-        console.log('📊 Calling checkAndProcessPendingUploads...');
+     //   console.log('📊 Calling checkAndProcessPendingUploads...');
         const results = await checkAndProcessPendingUploads();
-        console.log('📊 checkAndProcessPendingUploads completed:', results);
+     //   console.log('📊 checkAndProcessPendingUploads completed:', results);
         
         // Update the display after processing
-        console.log('🔄 Updating stored images display...');
+     //   console.log('🔄 Updating stored images display...');
         await checkForStoredImages();
-        console.log('✅ Display updated');
+     //   console.log('✅ Display updated');
         
         hideProcessingOverlay();
-        console.log('✅ Processing overlay hidden');
+     //   console.log('✅ Processing overlay hidden');
       /*
         // Show detailed success message
         if (results) {
@@ -5242,7 +5278,7 @@ async function UploadStoredImages() {
         */
         
     } catch (error) {
-        console.error('❌ Error processing uploads:', error);
+     //   console.error('❌ Error processing uploads:', error);
         hideProcessingOverlay();
         showUploadMessage('Error processing uploads: ' + error.message, 'error');
     }
@@ -5451,6 +5487,63 @@ function clearFooterMessages() {
     if (error) error.remove();
     if (progress) progress.remove();
 }
+
+async function startPhotoUploadProcess() {
+    if (isUploadingPhotos) {
+        console.log('Photo upload already in progress, skipping...');
+        return;
+    }
+    
+    try {
+        // Get all stored photos using your existing function
+        const allPhotos = await getAllStoredPhotos();
+        
+        if (allPhotos.length === 0) {
+            console.log('No photos found to upload');
+            return;
+        }
+        
+        console.log(`Starting background upload of ${allPhotos.length} photos...`);
+        isUploadingPhotos = true;
+        activityTimer.setUploading(true);
+        
+        // Process photos one by one with delay
+        for (let i = 0; i < allPhotos.length; i++) {
+            const photo = allPhotos[i];
+            
+            try {
+                console.log(`Uploading photo ${i + 1}/${allPhotos.length}: ${photo.phoneImageId}`);
+                
+                // Use your existing completePhotoUpload function
+                await completePhotoUpload(photo.phoneImageId);
+                
+                console.log(`✅ Photo ${photo.phoneImageId} uploaded successfully`);
+                
+                // Wait between uploads if not the last photo
+                if (i < allPhotos.length - 1) {
+                    console.log(`Waiting ${activityTimer.uploadInterval / 1000} seconds before next upload...`);
+                    await new Promise(resolve => setTimeout(resolve, activityTimer.uploadInterval));
+                }
+                
+            } catch (error) {
+                console.error(`❌ Failed to upload photo ${photo.phoneImageId}:`, error);
+                // Continue with next photo instead of stopping the whole process
+            }
+        }
+        
+        console.log('✅ Background photo upload process completed');
+        
+    } catch (error) {
+        console.error('❌ Error in photo upload process:', error);
+    } finally {
+        isUploadingPhotos = false;
+        activityTimer.setUploading(false);
+    }
+}
+
+
+
+
 // Simple IndexedDB-Only Photo Storage (iPhone Optimized)
 class IndexedDBPhotoStorage {
     constructor() {
@@ -5515,18 +5608,18 @@ class IndexedDBPhotoStorage {
                 const request = store.put(photoData);
                 
                 request.onsuccess = () => {
-                    console.log(`💾 Photo saved: ${phoneImageId} (${this.formatFileSize(imageBlob.size)})`);
+               //     console.log(`💾 Photo saved: ${phoneImageId} (${this.formatFileSize(imageBlob.size)})`);
                     resolve(phoneImageId);
                 };
                 
                 request.onerror = () => {
-                    console.error('Save failed:', request.error);
+               //     console.error('Save failed:', request.error);
                     reject(request.error);
                 };
             };
             
             reader.onerror = () => {
-                console.error('FileReader error:', reader.error);
+            //    console.error('FileReader error:', reader.error);
                 reject(reader.error);
             };
             
@@ -5600,12 +5693,12 @@ class IndexedDBPhotoStorage {
                 // Sort by timestamp (newest first)
                 results.sort((a, b) => b.timestamp - a.timestamp);
                 
-                console.log(`📋 Found ${results.length} photos`);
+              //  console.log(`📋 Found ${results.length} photos`);
                 resolve(results);
             };
             
             request.onerror = () => {
-                console.error('Get all photos failed:', request.error);
+            //    console.error('Get all photos failed:', request.error);
                 reject(request.error);
             };
         });
@@ -5624,7 +5717,7 @@ class IndexedDBPhotoStorage {
             getRequest.onsuccess = () => {
                 const existing = getRequest.result;
                 if (!existing) {
-                    console.warn(`Photo not found for update: ${phoneImageId}`);
+               //     console.warn(`Photo not found for update: ${phoneImageId}`);
                     resolve(false);
                     return;
                 }
@@ -5640,41 +5733,41 @@ class IndexedDBPhotoStorage {
                 const putRequest = store.put(existing);
                 
                 putRequest.onsuccess = () => {
-                    console.log(`📝 Updated: ${phoneImageId}`);
+               //     console.log(`📝 Updated: ${phoneImageId}`);
                     resolve(true);
                 };
                 
                 putRequest.onerror = () => {
-                    console.error('Update failed:', putRequest.error);
+                //    console.error('Update failed:', putRequest.error);
                     reject(putRequest.error);
                 };
             };
             
             getRequest.onerror = () => {
-                console.error('Get for update failed:', getRequest.error);
+            //    console.error('Get for update failed:', getRequest.error);
                 reject(getRequest.error);
             };
         });
     }
 
     async deletePhoto(phoneImageId) {
-        if (!this.isReady) await this.init();
-        
+    if (!this.isReady) await this.init();
+    
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction(['photos'], 'readwrite');
             const store = transaction.objectStore('photos');
             const request = store.delete(phoneImageId);
             
             request.onsuccess = () => {
-                console.log(`🗑️ Deleted: ${phoneImageId}`);
-                checkForStoredImages ();
                 resolve(true);
             };
             
             request.onerror = () => {
-                console.error('Delete failed:', request.error);
                 reject(request.error);
             };
+        }).then(async (result) => {
+            await checkForStoredImages(); // Update counter after deletion completes
+            return result;
         });
     }
 
@@ -5687,12 +5780,12 @@ class IndexedDBPhotoStorage {
             const request = store.clear();
             
             request.onsuccess = () => {
-                console.log('🧹 All photos cleared');
+           //     console.log('🧹 All photos cleared');
                 resolve(true);
             };
             
             request.onerror = () => {
-                console.error('Clear all failed:', request.error);
+           //     console.error('Clear all failed:', request.error);
                 reject(request.error);
             };
         });

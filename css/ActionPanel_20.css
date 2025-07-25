@@ -787,11 +787,41 @@ input[type="submit"]:focus {
   text-align: right;
 }
 .OptionCellRight {
-  font-size: var(--jgs-font-size-option-info);
-  text-align: right;
-  display: flex;
-  gap: 5px;
+   display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 25px !important;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    min-width: 100px;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(0, 123, 255, 0.08), rgba(0, 123, 255, 0.12));
+    border: 2px solid rgba(0, 123, 255, 0.2);
+    font-weight: 600;
 }
+
+.OptionCellRight:hover {
+    background: linear-gradient(135deg, rgba(0, 123, 255, 0.2), rgba(0, 123, 255, 0.25));
+    border-color: rgba(0, 123, 255, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.25);
+}
+
+.OptionCellRight:active {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.4);
+}
+/* For mobile devices - even larger touch targets */
+@media (max-width: 768px) {
+    .OptionCellRight {
+        padding: 20px 30px !important;
+        min-width: 120px;
+        font-size: 16px;
+        gap: 20px;
+    }
+}
+
 .OptionCellNum_Info {
   font-size: var(--jgs-font-size-option-info);
   float: right;

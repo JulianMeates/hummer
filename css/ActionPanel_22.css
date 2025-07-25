@@ -1,22 +1,35 @@
 /* This section provides "global definitions" e.g. to use the --jgs-font-size-data-enter value use font-size: var(--jgs-font-size-data-enter); 
  */
 :root {
+  /* Preserving original variables */
   --jgs-font-size-data-enter: 1rem;
   --jgs-font-size-heading: 1.2rem;
   --jgs-font-size-placeholder: 1rem;
-  --jgs-font-size-option: 1.1rem;
+  --jgs-font-size-option: 1rem;
   --jgs-font-size-option-info: 0.75rem;
   --jgs-font-size-option-label: 1rem;
   --jgs-font-size-option-blank: 1rem;
   --jgs-font-size-th: 1.1rem;
   --jgs-font-size-td-value: 1rem;
+
+  /* Enhanced color palette based on existing theme */
   --color-light-blue-100: #e0f2fe;
   --color-light-blue-200: #bae6fd;
   --color-light-blue-600: #0284c7;
+  --color-light-blue-700: #0369a1;
   --color-light-blue-900: #0c4a6e;
   --color-cool-grey-100: #f3f4f6;
+  --color-cool-grey-200: #e5e7eb;
+  --color-cool-grey-300: #d1d5db;
   --color-cool-grey-400: #9ca3af;
   --color-cool-grey-900: #111827;
+
+  /* New shadow variables */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 html {
@@ -106,12 +119,27 @@ h3 span {
   max-width: 300px;
 }
 
+.upload-option {
+    margin-top: 15px;
+    display: none; /* Hidden by default */
+}
+
+.upload-images-btn {
+    background-color: #2196F3 !important; /* Different color from login button */
+    margin-top: 10px;
+}
+
+.upload-images-btn:hover {
+    background-color: #1976D2 !important;
+}
+
+
 .ActionPanel {
   width: 100%;
   height: 100%;
-  padding: 16px;
+  padding: 10px;
   border-bottom: 3px solid var(--color-light-blue-900);
-  background-color: var(--color-cool-grey-100);
+  background-color: var(--color-light-blue-100);
 }
 
 .ActionForm {
@@ -135,10 +163,36 @@ h3 span {
   height: auto;
   cursor: pointer;
 }
+.ActionBackButton:hover,
+.ActionHome:hover {
+  background-color: var(--color-light-blue-200);
+}
+
+@media (hover: hover) and (pointer: coarse), (max-width: 1024px) {
+  .ActionBackButton:hover,
+  .ActionHome:hover {
+    background-color: initial;
+  }
+  .ActionBackButton:active,
+  .ActionHome:active {
+    background-color: var(--color-light-blue-200);
+  }
+}
+
 .ActionHomeButton {
   float: left;
   width: 100%;
   height: 100%;
+}
+
+b,
+i {
+  font-weight: 600;
+  color: var(--color-light-blue-900);
+}
+
+.action {
+  width : 100%;
 }
 
 .ActionHeading {
@@ -155,19 +209,26 @@ h3 span {
   display: none;
 }
 
+#A_Options {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* Critical for iOS */
+}
+
 .a_options {
   --sb-track-color: #e0f2fe;
   --sb-thumb-color: #7dd3fc;
   --sb-size: 10px;
   width: 100%;
-  overflow-y: scroll;
-  padding: 20px 10px 20px 20px;
+ overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  padding: 10px 5px 10px 10px;
   display: flex;
   flex-direction: column;
   flex: 1;
   gap: 8px;
   scrollbar-width: 0px;
 }
+
 
 .a_options::-webkit-scrollbar {
   width: var(--sb-size);
@@ -334,6 +395,7 @@ input[type="submit"]:focus {
 .ActionData {
   width: 100%;
   font-size: var(--jgs-font-size-data-enter);
+  max-width: 95%;
 }
 
 .ActionQRCode {
@@ -345,15 +407,9 @@ input[type="submit"]:focus {
 /** select box css **/
 
 .ActionOptions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin: 0rem -1.25rem;
-  margin-top: 1.25rem;
-  padding: 1.25rem;
-  background-color: var(--color-light-blue-100);
-  border-top: 2px solid black;
-  overflow: scroll;
+  display: inline-block;
+  width: 100%;
+  margin: auto auto auto 0;
 }
 
 .ActionFilter {
@@ -361,6 +417,7 @@ input[type="submit"]:focus {
   background-color: #ffffff;
   outline: 1px solid var(--color-light-blue-200);
   border-radius: 5px;
+  transition: all 0.2s ease;
   padding: 6px 10px;
   transition: outline 100ms;
   display: flex;
@@ -391,7 +448,7 @@ input[type="submit"]:focus {
   background-color: transparent;
   background-repeat: no-repeat;
   background-size: 24px 24px;
-  background-image: url("/Images/icon-search.svg");
+  background-image: url("/images/icon-search.svg");
   border: none;
 }
 
@@ -401,7 +458,7 @@ input[type="submit"]:focus {
   background-color: transparent;
   background-repeat: no-repeat;
   background-size: 20px 20px;
-  background-image: url("/Images/icon-viewfinder-active.svg");
+  background-image: url("/images/icon-viewfinder-active.svg");
   border: none;
 }
 .OptionIcon_Add {
@@ -410,12 +467,12 @@ input[type="submit"]:focus {
   background-color: transparent;
   background-repeat: no-repeat;
   background-size: 20px 20px;
-  background-image: url("/Images/icon-add-active.svg");
+  background-image: url("/images/icon-add-active.svg");
   border: none;
 }
 
 .Option {
-  border-radius: 2px;
+  border-radius: 5px;
   display: flex;
   align-items: center;
   gap: 5px;
@@ -425,6 +482,48 @@ input[type="submit"]:focus {
   cursor: pointer;
   padding: 0px 5px;
   transition: transform 0.2s;
+  border: 1px solid var(--color-cool-grey-300);
+}
+
+.Option:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.Option:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.Option.option-selected {
+    background-color: #e3f2fd;
+    border-left: 4px solid #1976d2;
+    box-shadow: 0 2px 4px rgba(25, 118, 210, 0.1);
+}
+
+.Option.option-selected:hover {
+    background-color: #bbdefb;
+}
+
+@keyframes selectPulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(25, 118, 210, 0.4);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 0 0 8px rgba(25, 118, 210, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 2px 4px rgba(25, 118, 210, 0.1);
+    }
+}
+
+@media (max-width: 500px) {
+  .Option {
+    padding: 10px 10px;
+  }
 }
 
 .Option_Next {
@@ -508,6 +607,7 @@ input[type="submit"]:focus {
   display: inline-block;
   background-color: lightgrey;
   cursor: pointer;
+
 }
 .Option_Inactive .tooltiptext {
   visibility: hidden;
@@ -536,7 +636,7 @@ input[type="submit"]:focus {
 }
 
 .OptionCellIcon_DOWN {
-  background-image: url("../Images/Chevron.png");
+  background-image: url("../images/Chevron.png");
   background-repeat: no-repeat;
   background-size: 15px 10px;
   background-position: left bottom;
@@ -550,7 +650,7 @@ input[type="submit"]:focus {
 }
 
 .OptionCellIcon_UP {
-  background-image: url("../Images/ChevronUp.png");
+  background-image: url("../images/ChevronUp.png");
   background-repeat: no-repeat;
   background-size: 10px 15px;
   background-position: left bottom;
@@ -580,6 +680,8 @@ input[type="submit"]:focus {
   height: 16px;
   background-repeat: no-repeat;
   background-size: 16px 16px;
+  overflow: visible;
+  flex-shrink: 0;
 }
 
 .DisplayIcon {
@@ -588,14 +690,86 @@ input[type="submit"]:focus {
   background-size: 20px 20px;
   background-position: center;
 }
-
 .AutoSpecific {
-  position: relative;
-  top: -15px;
-  align-self: flex-end;
+    position: relative;
+    top: -10px;
+    left: 95%;
+  }
+.iconCalendar {
+  background-image: url("/images/icon-calendar.svg");
 }
-
-
+.iconSearch {
+  background-image: url("/images/icon-search.svg");
+}
+.iconAddActive {
+  background-image: url("/images/icon-add-active.svg");
+}
+.iconAddDisabled {
+  background-image: url("/images/icon-add-disabled.svg");
+}
+.iconCommitActive {
+  background-image: url("/images/icon-commit-active.svg");
+}
+.iconCommitDisabled {
+  background-image: url("/images/icon-commit-disabled.svg");
+}
+.iconConnectionActive {
+  background-image: url("/images/icon-connection-active.svg");
+}
+.iconConnectionDisabled {
+  background-image: url("/images/icon-connection-disabled.svg");
+}
+.iconEditActive {
+  background-image: url("/images/icon-edit-active.svg");
+}
+.iconEditDisabled {
+  background-image: url("/images/icon-edit-disabled.svg");
+}
+.iconExpandActive {
+  background-image: url("/images/icon-expand-active.svg");
+}
+.iconExpandDisabled {
+  background-image: url("/images/icon-expand-disabled.svg");
+}
+.iconWarningActive {
+  background-image: url("/images/icon-warning-active.svg");
+}
+.iconWarningDisabled {
+  background-image: url("/images/icon-warning-disabled.svg");
+}
+.iconViewfinderActive {
+  background-image: url("/images/icon-viewfinder-active.svg");
+}
+.iconViewfinderDisabled {
+  background-image: url("/images/icon-viewfinder-disabled.svg");
+}
+.iconCompany {
+  background-image: url("/images/icon-company.svg");
+}
+.iconPerson {
+  background-image: url("/images/icon-person.svg");
+}
+.iconProject {
+  background-image: url("/images/icon-project.svg");
+}
+.iconProjectExport {
+  background-image: url("/images/icon-project-export.svg");
+}
+.iconProjectOutdoor {
+  background-image: url("/images/icon-project-outdoor.svg");
+}
+.iconProjectResidential {
+  background-image: url("/images/icon-project-residential.svg");
+}
+.iconSalesActivity {
+  background-image: url("/images/icon-sales-activity.svg");
+}
+.iconWorkflowForward {
+  background-image: url("/images/icon-workflow-forward.svg");
+}
+.iconWorkflowBack {
+  background-image: url("/images/icon-workflow-back.svg");
+}
 
 .OptionCellCode {
   font-size: var(--jgs-font-size-option-info);
@@ -612,12 +786,32 @@ input[type="submit"]:focus {
   font-size: var(--jgs-font-size-option-info);
   text-align: right;
 }
+
 .OptionCellRight {
   font-size: var(--jgs-font-size-option-info);
   text-align: right;
   display: flex;
   gap: 5px;
 }
+@media (max-width: 768px) {
+  .OptionCellRight {
+     display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 3px !important;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      min-width: 50px;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(0, 123, 255, 0.08), rgba(0, 123, 255, 0.12));
+      border: 2px solid rgba(0, 123, 255, 0.2);
+      
+  }
+}
+
+
+
 .OptionCellNum_Info {
   font-size: var(--jgs-font-size-option-info);
   float: right;
@@ -928,6 +1122,68 @@ input[type="submit"]:focus {
   clear: both;
 }
 
+.Step_OptionRowYesNo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    margin: 20px 0;
+}
+
+.YesNo_buttonOption {
+    width: 150px;
+    height: 100px;
+    font-size: 18px;
+    font-weight: bold;
+    border: 2px solid;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.yesbutton {
+    background-color: #28a745;
+    color: white;
+    border-color: #1e7e34;
+}
+
+.yesbutton:hover {
+    background-color: #218838;
+    transform: translateY(-2px);
+}
+
+.nobutton {
+    background-color: #dc3545;
+    color: white;
+    border-color: #c82333;
+}
+
+.nobutton:hover {
+    background-color: #c82333;
+    transform: translateY(-2px);
+}
+
+.yesbutton::before {
+    font-family: "Font Awesome 6 Pro";
+    font-weight: 900; /* Solid style */
+    content: "\f00c"; /* fa-check */
+    font-size: 40px;
+    display: block;
+}
+
+.nobutton::before {
+    font-family: "Font Awesome 6 Pro";
+    font-weight: 900; /* Solid style */
+    content: "\f00d"; /* fa-xmark */
+    font-size: 40px;
+    display: block;
+}
+/*
 .yesbutton,
 .nobutton,
 .yesbutton_w,
@@ -960,7 +1216,7 @@ input[type="submit"]:focus {
   max-width: 100% !important;
   width: auto !important;
 }
-
+*/
 .cancelbutton {
   color: #fff;
   background: #cccccc;
@@ -976,7 +1232,6 @@ input[type="submit"]:focus {
 .zipzip {
   width: 10%;
 }
-
 
 
 
@@ -1140,3 +1395,17 @@ input[type="submit"]:focus {
             color: #666;
             margin-top: 6px;
         }
+
+
+
+        .setting-section {
+    margin-bottom: 20px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+}
+
+
+
+
+

@@ -14,6 +14,9 @@ var lChunkNumber = 0;
 var reader = null;
 var fileToUpload = null;
 let settingsInitialized = false;
+let pendingPhotos = [];
+let isUploadingPhotos = false;
+
 
 (function(exports) {
   var base32 = {
@@ -946,7 +949,7 @@ function submitFile_DestinationHandle() {
     
     console.log('Requesting destination handle for file:', fileToUpload.name, 'Size:', fileToUpload.size);
   
-    JadeRestRequest(lJson)
+    JadeRestRequest(lJson, false)
     .then(response => {
         try {
             var lResponse;
@@ -1044,7 +1047,7 @@ function submitFile_SendChunk(pChunk, pChunkNumber, pNumberOfChunks) {
     
     showFooterError("Uploading file " + fileToUpload.name + " " + lPercent + '% Complete');
 
-    JadeRestRequest(lJson)
+    JadeRestRequest(lJson, true)
     .then(response => {
         try {
             var lResponse;
@@ -1139,7 +1142,7 @@ function loadLogon_New() {
   json = json.replace("}", ',"systemName":"' + glbSystemName + '"}');
  
 
-JadeRestRequest (json)
+JadeRestRequest (json, false)
   .then (response =>  
       {
      PopulatePanels (response);
@@ -1228,22 +1231,17 @@ function loadLogon() {
 
 
 function submitForm(formElement) {
-
   if (glbSubmitted) {
     return;
   }
-
   var lOz = formElement.oz;
   if (typeof(lOz) == 'undefined' || lOz == null  || lOz.value != "Rest" ) {
     formElement.submit();
     return;
   }
-
   glbSubmitted = true;
-
   showProcessingForAction ("");
   window.document.body.style.cursor = "wait"; 
-
   var win = window;
   var formData = new FormData(formElement);
   var object = {};
@@ -1257,50 +1255,66 @@ function submitForm(formElement) {
   object["formName"] = formElement.name;
   formData.forEach((value, key) => {
  
-
-  if (key == "doc") {
-       lValue = value;
-  } else if (key == "fileName") {
-       lValue = Conversions.base32.encode(value.name);
-  } else if (key == "file") {
-       lValue = Conversions.base32.encode(value.name);
-  } else if (key == "rid") {
-      lValue = generateRandomString ();
-  } else {
-     cleanedText = value.replace(/[\x00-\x09\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, "");
-     cleanedText = cleanedText.replace(/<0x[0-9A-Fa-f]{1,2}>/gi, '');   
-     cleanedText = cleanedText.replace(/[–—]/g, '-');
-     lValue = Conversions.base32.encode(cleanedText);
-  
-  }
-
-
-  if(!Reflect.has(object, key)){
-      object[key] = lValue;
-      return;
-  }
-  if(!Array.isArray(object[key])){
-      object[key] = [object[key]];
-  }
-  object[key].push(lValue);
-});
-
-var json = JSON.stringify(object);
-json = json.replace("}", ',"systemName":"' + glbSystemName + '"}');
-lUrl = glbPostRestUrl;
-
-
-JadeRestRequest (json)
-  .then (response =>  
-      {
-     PopulatePanels (response);
-     })
-      .catch(error => {
-       glbSubmitted = false;
-       hideProcessing ();
-       window.document.body.style.cursor = "auto"; 
-
+    if (key == "doc") {
+         lValue = value;
+    } else if (key == "fileName") {
+         lValue = Conversions.base32.encode(value.name);
+    } else if (key == "file") {
+         lValue = Conversions.base32.encode(value.name);
+    } else if (key == "rid") {
+        lValue = generateRandomString ();
+    } else {
+       cleanedText = value.replace(/[\x00-\x09\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, "");
+       cleanedText = cleanedText.replace(/<0x[0-9A-Fa-f]{1,2}>/gi, '');   
+       cleanedText = cleanedText.replace(/[–—]/g, '-');
+       lValue = Conversions.base32.encode(cleanedText);
+    
+    }
+    if(!Reflect.has(object, key)){
+        object[key] = lValue;
+        return;
+    }
+    if(!Array.isArray(object[key])){
+        object[key] = [object[key]];
+    }
+    object[key].push(lValue);
   });
+  
+  var json = JSON.stringify(object);
+  json = json.replace("}", ',"systemName":"' + glbSystemName + '"}');
+  lUrl = glbPostRestUrl;
+  
+  JadeRestRequest (json, false)
+    .then (response => {
+        console.log('Question submitted successfully:', response);
+        
+        // Call the upload success callback - entire process is now complete!
+        if (typeof window.uploadOnSuccess === 'function') {
+            console.log('Calling uploadOnSuccess callback after question submission...');
+            try {
+                window.uploadOnSuccess({
+                    fileHandle: object.doc, // The file handle that was uploaded
+                    fileName: fileToUpload ? fileToUpload.name : 'unknown',
+                    questionResponse: response,
+                    formData: object,
+                    status: 'Complete'
+                });
+            } catch (callbackError) {
+                console.error('Error in uploadOnSuccess callback:', callbackError);
+            }
+        } else {
+            console.warn('uploadOnSuccess callback not found');
+        }
+        
+        // Your existing response handling
+        PopulatePanels (response);
+    })
+    .catch(error => {
+        console.error('Question submission failed:', error);
+        glbSubmitted = false;
+        hideProcessing ();
+        window.document.body.style.cursor = "auto"; 
+    });
 }
 
 function PopulatePanels (pResponse){
@@ -1362,10 +1376,14 @@ function PopulatePanels (pResponse){
           }
 
       const regex = /scrolltome="([^"]+)"/i;
-       match = lSectionHtml.match(regex);
-       if (match){
+      match = lSectionHtml.match(regex);
+      if (match){
         console.log(match[1]);
-         }
+      }
+      if (!lSectionHtml.includes ( '<div class="camera-container">')){
+          stopCamera();
+      }
+
     } else if (lHaveAction) {
         var element = document.getElementById("A_Options");
         element.innerHTML = "&nbsp;";
@@ -1442,6 +1460,7 @@ function PopulatePanels (pResponse){
     var f = document.getElementById(glbBaseFormName);
     if (f.sid){
       glb_sid = f.sid.value;
+      initializeActivityTimer();
     }
    
     checkForStoredImages ();
@@ -1821,17 +1840,26 @@ function submitValue_Web (n) {
 }
 
 
-
-function JadeRestRequest(formData, options = {}) {
-    // Enhanced options for iPhone compatibility
+function JadeRestRequest(formData, skipTimerReset = false) {
+    // Only reset the timer if skipTimerReset is false and this isn't an upload request
+    if (!skipTimerReset && activityTimer && typeof activityTimer.resetTimer === 'function') {
+        activityTimer.resetTimer();
+    }
+    
+    // Enhanced options for iPhone compatibility (keeping your existing config)
     const config = {
-        maxRetries: options.maxRetries || 3,
-        retryDelay: options.retryDelay || 1000,
-        timeout: options.timeout || 45000, // Longer timeout for iPhone
-        forceXHR: options.forceXHR || isIOS(), // Force XHR on iOS
-        debug: options.debug || false,
-        url: options.url || glbPostRestUrl
+        maxRetries:  3,
+        retryDelay: 1000,
+        timeout:  45000,
+        forceXHR:  isIOS(),
+        debug:  false,
+        url: glbPostRestUrl
     };
+    
+    // Log the data being sent for debugging
+    if (config.debug) {
+        console.log('📤 JadeJSON sending data:', formData.substring(0, 500));
+    }
     
     let retryCount = 0;
     
@@ -1894,7 +1922,6 @@ function JadeRestRequest(formData, options = {}) {
                         throw new Error(`HTTP error! Status: ${response.status}`);
                     }
                     
-                    // Check content type
                     const contentType = response.headers.get('content-type');
                     if (contentType && contentType.includes('application/json')) {
                         return response.json();
@@ -1925,7 +1952,7 @@ function JadeRestRequest(formData, options = {}) {
         });
     };
     
-    // Enhanced XHR for iPhone
+    // Enhanced XHR for iPhone (keeping your existing implementation)
     const xhrRequest = (jsonData, controller, timeoutId) => {
         return new Promise((resolve, reject) => {
             log('Using XMLHttpRequest for iPhone compatibility');
@@ -1933,7 +1960,6 @@ function JadeRestRequest(formData, options = {}) {
             const xhr = new XMLHttpRequest();
             xhr.timeout = config.timeout;
             
-            // Handle abort
             controller.signal.addEventListener('abort', () => {
                 xhr.abort();
             });
@@ -1996,11 +2022,83 @@ function JadeRestRequest(formData, options = {}) {
     return makeRequest(formData, 0);
 }
 
+// Initialize the timer only after login (modify your existing code)
+let activityTimer = null;
+
+// Call this after successful login instead of on page load
+function initializeActivityTimer() {
+    if (!activityTimer) {
+        activityTimer = new ActivityTimer({
+            idleTimeout: 5 * 60 * 1000, // 5 minutes
+            onIdle: function() {
+                console.log('User has been idle, starting photo upload process...');
+                startPhotoUploadProcess();
+            }
+        });
+        console.log('✅ Activity timer initialized after login');
+    }
+}
+
+// Add this to your successful login response handler
+function handleLoginSuccess() {
+    // Your existing login success code...
+    
+    // Initialize the activity timer after login
+    initializeActivityTimer();
+}
+
 // Helper function to detect iOS
 function isIOS() {
     return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 }
+
+class ActivityTimer {
+    constructor(options = {}) {
+        this.idleTimeout = options.idleTimeout || 5 * 60 * 1000; // 5 minutes
+        this.uploadInterval = options.uploadInterval || 1 * 60 * 1000; // 1 minute between uploads
+        this.onIdleCallback = options.onIdle || null;
+        
+        this.idleTimer = null;
+        this.isUploading = false;
+    }
+    
+    // Call this method whenever there's user activity or AJAX calls
+    resetTimer() {
+        if (this.idleTimer) {
+            clearTimeout(this.idleTimer);
+        }
+        
+        // Don't start new timer if already uploading
+        if (this.isUploading) {
+            return;
+        }
+        
+        this.idleTimer = setTimeout(() => {
+            if (this.onIdleCallback) {
+                this.onIdleCallback();
+            }
+        }, this.idleTimeout);
+        
+        console.log(`Activity detected. Timer reset for ${this.idleTimeout / 1000} seconds.`);
+    }
+    
+    setUploading(isUploading) {
+        this.isUploading = isUploading;
+        if (!isUploading) {
+            this.resetTimer(); // Resume timer when uploading is done
+        }
+    }
+    
+    stop() {
+        if (this.idleTimer) {
+            clearTimeout(this.idleTimer);
+            this.idleTimer = null;
+        }
+    }
+}
+
+
 
 
 class ConnectionMonitor {
@@ -3387,6 +3485,9 @@ async function capturePhoto() {
             quality: imageQualitySettings.quality,
             mimeType: imageQualitySettings.mimeType,
             clientId: getClientId(),
+            completedChunks: [],
+            fileHandle: null, 
+            numberOfChunks: null, 
             status: 'captured',
             serverUniqueId: null,
             compressionInfo: {
@@ -3473,7 +3574,7 @@ async function compressForIOS(file, maxSize = 500000) {
 async function uploadLater() {
     const capturedPhoto = document.getElementById('capturedPhoto');
     showProcessingOverlay('Saving Photo...');
-    stopCamera();
+    
     if (!capturedPhoto.phoneImageId) return;
     
     try {
@@ -3525,14 +3626,7 @@ async function uploadImageToServer(phoneImageId) {
         // Check if photo has file handle
         if (!photoData.metadata.fileHandle) {
             console.log(`❌ Photo ${phoneImageId} has no file handle - deleting it`);
-            
-            // Delete the photo without file handle
             await photoStorage.deletePhoto(phoneImageId);
-            
-            // Optionally show notification
-            showFooterNotification(`Photo ${phoneImageId} deleted (no file handle)`);
-            
-            // Return early - no upload needed
             return { 
                 success: false, 
                 deleted: true, 
@@ -3540,25 +3634,58 @@ async function uploadImageToServer(phoneImageId) {
             };
         }
 
-        // Continue with normal upload process
-        const { fileHandle, numberOfChunks } = photoData.metadata;
+        const { fileHandle, numberOfChunks, completedChunks = [] } = photoData.metadata;
         const fileToUpload = photoData.imageBlob;
         
         console.log(`Starting upload: ${numberOfChunks} chunks for ${fileToUpload.size} bytes`);
+        console.log(`Previously completed chunks: [${completedChunks.join(', ')}]`);
         
-        // Upload chunks
+        // Determine which chunks still need to be uploaded
+        const remainingChunks = [];
+        for (let i = 1; i <= numberOfChunks; i++) {
+            if (!completedChunks.includes(i)) {
+                remainingChunks.push(i);
+            }
+        }
+        
+        if (remainingChunks.length === 0) {
+            console.log('✅ All chunks already uploaded, marking as complete');
+            await photoStorage.deletePhoto(phoneImageId);
+            return { success: true, fileHandle };
+        }
+        
+        console.log(`📊 Need to upload ${remainingChunks.length} remaining chunks: [${remainingChunks.join(', ')}]`);
+        
+        // Upload only the remaining chunks
         let lByteIndex = 0;
         let lChunkStatus = null;
         
         for (let lChunkNumber = 1; lChunkNumber <= numberOfChunks; lChunkNumber++) {
             const lByteEnd = Math.ceil((fileToUpload.size / numberOfChunks) * lChunkNumber);
+            
+            // Skip chunks that are already completed
+            if (completedChunks.includes(lChunkNumber)) {
+                console.log(`⏭️ Skipping already completed chunk ${lChunkNumber}`);
+                lByteIndex += (lByteEnd - lByteIndex);
+                continue;
+            }
+            
             const lChunk = fileToUpload.slice(lByteIndex, lByteEnd);
             
             console.log(`Uploading chunk ${lChunkNumber}/${numberOfChunks} (${lChunk.size} bytes)`);
             
             try {
                 const chunkDataURL = await readChunkAsDataURL(lChunk);
-                const chunkResponse = await sendChunkToServerWithRetry(fileHandle, lChunkNumber, numberOfChunks, chunkDataURL);
+                
+                // Pass phoneImageId so chunk progress can be updated
+                const chunkResponse = await sendChunkToServerWithRetry(
+                    fileHandle, 
+                    lChunkNumber, 
+                    numberOfChunks, 
+                    chunkDataURL,
+                    5, // maxRetries
+                    phoneImageId // Pass phoneImageId for progress tracking
+                );
                 
                 let lJadeData;
                 if (typeof chunkResponse === 'string') {
@@ -3574,7 +3701,18 @@ async function uploadImageToServer(phoneImageId) {
                         throw new Error(`Server error on chunk ${lChunkNumber}: ${lJadeData.error || 'Unknown error'}`);
                     }
                     
-                    // Update progress
+                    // Handle your specific JSON format for chunk confirmation
+                    if (lChunkStatus === "Done" && lJadeData.chunk) {
+                        const serverChunkNumber = parseInt(lJadeData.chunk);
+                        console.log(`✅ Server confirmed chunk ${serverChunkNumber} completed`);
+                        
+                        // Verify chunk number matches
+                        if (serverChunkNumber !== lChunkNumber) {
+                            console.warn(`⚠️ Chunk mismatch: sent ${lChunkNumber}, server confirmed ${serverChunkNumber}`);
+                        }
+                    }
+                    
+                    // Update progress display
                     const progressPercent = Math.round((lChunkNumber / numberOfChunks) * 100);
                     updateUploadProgress(`photo-${phoneImageId}.jpg`, progressPercent);
                 }
@@ -3610,6 +3748,28 @@ async function uploadImageToServer(phoneImageId) {
     }
 }
 
+async function getChunkResumeInfo(phoneImageId) {
+    try {
+        const photoData = await getPhotoByPhoneId(phoneImageId);
+        if (!photoData || !photoData.metadata) {
+            return null;
+        }
+        
+        const { completedChunks = [], totalChunks, lastCompletedChunk = 0 } = photoData.metadata;
+        
+        return {
+            completedChunks,
+            totalChunks,
+            lastCompletedChunk,
+            nextChunk: lastCompletedChunk + 1,
+            remainingChunks: totalChunks - completedChunks.length,
+            progress: Math.round((completedChunks.length / totalChunks) * 100)
+        };
+    } catch (error) {
+        console.error('Error getting chunk resume info:', error);
+        return null;
+    }
+}
 
 // Safe error handling function
 async function registerPhotoWithServer(phoneImageId) {
@@ -3657,7 +3817,7 @@ async function registerPhotoWithServer(phoneImageId) {
         console.log('Sending payload:', lJson);
 
         // Make server request
-        const response = await JadeRestRequest(lJson);
+        const response = await JadeRestRequest(lJson, false);
         
         let lResponse;
         if (glbReponseEncoded) {
@@ -3762,15 +3922,15 @@ async function convertStoredImageToBlob(storedRecord) {
 }
 
 
-
-async function sendChunkToServerWithRetry(fileHandle, chunkIndex, numChunks, chunkDataURL, maxRetries = 5) {
+async function sendChunkToServerWithRetry(fileHandle, chunkIndex, numChunks, chunkDataURL, maxRetries = 5, phoneImageId = null) {
     let lastError = null;
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             console.log(`📤 Attempt ${attempt}/${maxRetries} - Sending chunk ${chunkIndex}/${numChunks}`);
             
-            const result = await sendChunkToServerSingle(fileHandle, chunkIndex, numChunks, chunkDataURL, attempt);
+            // Pass phoneImageId to the single chunk function
+            const result = await sendChunkToServerSingle(fileHandle, chunkIndex, numChunks, chunkDataURL, attempt, phoneImageId);
             console.log(`✅ Chunk ${chunkIndex} sent successfully on attempt ${attempt}`);
             return result;
             
@@ -3778,16 +3938,16 @@ async function sendChunkToServerWithRetry(fileHandle, chunkIndex, numChunks, chu
             lastError = error;
             console.warn(`⚠️ Chunk ${chunkIndex} attempt ${attempt} failed:`, error.message);
             
-            // Don't retry on certain errors
             if (isNonRetryableError(error)) {
                 console.error(`❌ Non-retryable error for chunk ${chunkIndex}:`, error.message);
                 throw error;
             }
             
-            // Wait before retry with exponential backoff
             if (attempt < maxRetries) {
-                const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000); // Max 10 seconds
-                console.log(`⏳ Waiting ${delay}ms before retry...`);
+                // Increased retry delays: 5s, 10s, 20s, 30s
+                const baseDelay = 5000; // Start with 5 seconds instead of 1 second
+                const delay = Math.min(baseDelay * Math.pow(2, attempt - 1), 30000); // Max 30 seconds
+                console.log(`⏳ Waiting ${delay / 1000} seconds before retry attempt ${attempt + 1}...`);
                 await new Promise(resolve => setTimeout(resolve, delay));
             }
         }
@@ -3795,6 +3955,148 @@ async function sendChunkToServerWithRetry(fileHandle, chunkIndex, numChunks, chu
     
     console.error(`❌ Chunk ${chunkIndex} failed after ${maxRetries} attempts`);
     throw lastError;
+}
+
+async function sendChunkToServerSingle(fileHandle, chunkIndex, numChunks, chunkDataURL, attempt = 1, phoneImageId = null) {
+    const payload = {
+        systemName: glbSystemName,
+        formName: "FileChunkSave",
+        vin: Conversions.base32.encode(fileHandle),
+        doc: chunkDataURL,
+        ck: chunkIndex.toString(),
+        ct: numChunks.toString(),  
+        sid: Conversions.base32.encode(glb_sid),
+        rid: generateRandomString()
+    };
+    
+    console.log(`📤 Sending chunk ${chunkIndex}/${numChunks} (attempt ${attempt})`);
+    
+    try {
+        // **IMPORTANT**: Use skipTimerReset = true for chunk uploads
+        const response = await JadeRestRequest(JSON.stringify(payload),true); // <- This true parameter skips timer reset
+        
+        let result;
+        
+        if (!response) {
+            throw new Error('Empty response from server');
+        }
+        
+        if (glbReponseEncoded) {
+            try {
+                const decodedResponse = atob(response);
+                if (!decodedResponse || decodedResponse.trim() === '') {
+                    throw new Error('Empty decoded response');
+                }
+                result = JSON.parse(decodedResponse);
+            } catch (decodeError) {
+                console.error('Decode error:', decodeError);
+                throw new Error(`Failed to decode server response: ${decodeError.message}`);
+            }
+        } else {
+            if (typeof response === 'string') {
+                if (response.trim() === '') {
+                    throw new Error('Empty string response');
+                }
+                try {
+                    result = JSON.parse(response);
+                } catch (parseError) {
+                    console.error('JSON parse error:', parseError);
+                    throw new Error(`Invalid JSON response: ${parseError.message}`);
+                }
+            } else {
+                result = response;
+            }
+        }
+        
+        if (!result || typeof result !== 'object') {
+            throw new Error('Invalid response format - not an object');
+        }
+        
+        console.log(`✅ Chunk ${chunkIndex} server response:`, result);
+        
+        // **NEW**: Check if server confirms chunk completion and update IndexedDB
+        // Handle your specific JSON format: {"status": "Done", "chunk": "3"}
+        if (result.status === "Done" && result.chunk) {
+            const serverChunkNumber = parseInt(result.chunk);
+            console.log(`✅ Server confirmed chunk ${serverChunkNumber} completed (expected: ${chunkIndex})`);
+            
+            // Verify the chunk number matches what we sent
+            if (serverChunkNumber === chunkIndex) {
+                // Update chunk progress in IndexedDB if phoneImageId is provided
+                if (phoneImageId) {
+                    await updateChunkProgress(phoneImageId, chunkIndex, numChunks);
+                }
+            } else {
+                console.warn(`⚠️ Chunk number mismatch: sent ${chunkIndex}, server confirmed ${serverChunkNumber}`);
+            }
+        } else if (result.status === "Complete") {
+            // Handle final completion status
+            console.log(`🎉 Server confirmed upload complete`);
+            if (phoneImageId) {
+                await updateChunkProgress(phoneImageId, chunkIndex, numChunks, true); // Mark as final chunk
+            }
+        }
+        
+        return result;
+        
+    } catch (error) {
+        console.error(`❌ Error sending chunk ${chunkIndex}:`, error);
+        throw new Error(`Upload failed for chunk ${chunkIndex}: ${error.message}`);
+    }
+}
+async function updateChunkProgress(phoneImageId, completedChunkNumber, totalChunks, isFinalChunk = false) {
+    try {
+        // Get current photo data
+        const photoData = await getPhotoByPhoneId(phoneImageId);
+        if (!photoData) {
+            console.warn(`Photo ${phoneImageId} not found for chunk progress update`);
+            return;
+        }
+        
+        // Get existing completed chunks or initialize empty array
+        const existingChunks = photoData.metadata?.completedChunks || [];
+        
+        // Add the completed chunk number if it's not already in the array
+        if (!existingChunks.includes(completedChunkNumber)) {
+            existingChunks.push(completedChunkNumber);
+            existingChunks.sort((a, b) => a - b); // Keep sorted
+        }
+        
+        const progress = Math.round((existingChunks.length / totalChunks) * 100);
+        const allChunksComplete = existingChunks.length >= totalChunks || isFinalChunk;
+        
+        // Update the photo record with chunk progress
+        const updateData = {
+            completedChunks: existingChunks,
+            totalChunks: totalChunks,
+            lastCompletedChunk: completedChunkNumber,
+            uploadProgress: progress,
+            lastChunkCompletedAt: new Date().toISOString()
+        };
+        
+        // Set status based on completion
+        if (allChunksComplete) {
+            updateData.uploadStatus = 'chunks_complete';
+            updateData.allChunksCompletedAt = new Date().toISOString();
+            console.log(`🎉 All chunks completed for ${phoneImageId}!`);
+        } else {
+            updateData.uploadStatus = 'uploading_chunks';
+        }
+        
+        await updatePhotoWithUploadInfo(phoneImageId, updateData);
+        
+        console.log(`📊 Chunk progress updated for ${phoneImageId}: ${existingChunks.length}/${totalChunks} chunks (${progress}%)`);
+        console.log(`📋 Completed chunks: [${existingChunks.join(', ')}]`);
+        
+        // Show progress in footer if this is a foreground upload
+        if (typeof updateUploadProgress === 'function') {
+            updateUploadProgress(`photo-${phoneImageId}.jpg`, progress);
+        }
+        
+    } catch (error) {
+        console.error('Error updating chunk progress:', error);
+        // Don't throw - this is just progress tracking
+    }
 }
 
 function isNonRetryableError(error) {
@@ -3812,90 +4114,6 @@ function isNonRetryableError(error) {
 }
 
 
-async function sendChunkToServerSingle(fileHandle, chunkIndex, numChunks, chunkDataURL, attempt = 1) {
-    const payload = {
-        systemName: glbSystemName,
-        formName: "FileChunkSave",
-        vin: Conversions.base32.encode(fileHandle),
-        doc: chunkDataURL,
-        ck: chunkIndex.toString(),
-        ct: numChunks.toString(),  
-        sid: Conversions.base32.encode(glb_sid),
-        rid: generateRandomString()
-    };
-    
-    console.log(`📤 Sending chunk ${chunkIndex}/${numChunks} (attempt ${attempt})`);
-    
-    try {
-        // Use enhanced request with longer timeout for chunks
-        const response = await JadeRestRequest(JSON.stringify(payload), {
-            timeout: 60000, // 60 second timeout for chunks
-            maxRetries: 1, // We handle retries at chunk level
-            debug: true
-        });
-        
-        // Enhanced response validation
-        let result;
-        
-        if (!response) {
-            throw new Error('Empty response from server');
-        }
-        
-        if (glbReponseEncoded) {
-            try {
-                const decodedResponse = atob(response);
-                if (!decodedResponse || decodedResponse.trim() === '') {
-                    throw new Error('Empty decoded response');
-                }
-                result = JSON.parse(decodedResponse);
-            } catch (decodeError) {
-                console.error('Decode error:', decodeError);
-                console.error('Raw response length:', response ? response.length : 'null');
-                console.error('Raw response preview:', response ? response.substring(0, 100) : 'null');
-                throw new Error(`Failed to decode server response: ${decodeError.message}`);
-            }
-        } else {
-            if (typeof response === 'string') {
-                if (response.trim() === '') {
-                    throw new Error('Empty string response');
-                }
-                try {
-                    result = JSON.parse(response);
-                } catch (parseError) {
-                    console.error('JSON parse error:', parseError);
-                    console.error('Response length:', response.length);
-                    console.error('Response preview:', response.substring(0, 200));
-                    console.error('Response end:', response.substring(Math.max(0, response.length - 100)));
-                    throw new Error(`Invalid JSON response: ${parseError.message}`);
-                }
-            } else {
-                result = response;
-            }
-        }
-        
-        // Validate result structure
-        if (!result || typeof result !== 'object') {
-            throw new Error('Invalid response format - not an object');
-        }
-        
-        console.log(`✅ Chunk ${chunkIndex} server response:`, result);
-        return result;
-        
-    } catch (error) {
-        console.error(`❌ Error sending chunk ${chunkIndex}:`, error);
-        
-        // Add more context to the error
-        if (error.message.includes('JSON Parse error')) {
-            throw new Error(`Server response parsing failed for chunk ${chunkIndex}: ${error.message}`);
-        } else if (error.message.includes('timeout')) {
-            throw new Error(`Upload timeout for chunk ${chunkIndex}: ${error.message}`);
-        } else if (error.message.includes('Network')) {
-            throw new Error(`Network error for chunk ${chunkIndex}: ${error.message}`);
-        } else {
-            throw new Error(`Upload failed for chunk ${chunkIndex}: ${error.message}`);
-        }
-    }
-}
 
 // Fixed sendChunkToServer function with better error handling
 async function sendChunkToServer(fileHandle, chunkIndex, numChunks, chunkDataURL) {
@@ -3913,7 +4131,7 @@ async function sendChunkToServer(fileHandle, chunkIndex, numChunks, chunkDataURL
     console.log(`Sending chunk ${chunkIndex}/${numChunks} with payload keys:`, Object.keys(payload));
     
     try {
-        const response = await JadeRestRequest(JSON.stringify(payload));
+        const response = await JadeRestRequest(JSON.stringify(payload), true);
         
         let result;
         if (glbReponseEncoded) {
@@ -4003,10 +4221,9 @@ async function completePhotoUpload(phoneImageId) {
 }
 
 
-// Modified upload now function that uses your existing submitFile_DestinationHandle
 async function uploadNow() {
     showProcessingOverlay('Uploading Photo to Server...');
-    stopCamera();
+   
     const capturedPhoto = document.getElementById('capturedPhoto');
     if (!capturedPhoto.phoneImageId) return;
 
@@ -4020,6 +4237,9 @@ async function uploadNow() {
         if (!photoData) {
             throw new Error('Photo not found in local storage');
         }
+        
+        // Store the phoneImageId for cleanup after upload
+        const phoneImageIdToDelete = photoData.phoneImageId;
         
         // Create File object and set global fileToUpload variable for your existing system
         window.fileToUpload = new File([photoData.imageBlob], `photo-${photoData.phoneImageId}.jpg`, {
@@ -4039,10 +4259,16 @@ async function uploadNow() {
         window.uploadOnSuccess = async function(serverResponse) {
             try {
                 // Your existing system completed successfully
-                // Update photo status to uploaded
-                await updatePhotoStatus(photoData.phoneImageId, 'uploaded');
+                console.log(`✅ Upload Now completed successfully for ${phoneImageIdToDelete}`);
                 
-                showSuccessMessage('📸 Photo uploaded successfully!');
+                // **DELETE IMAGE**: Remove from local storage since Upload Now was chosen
+                await deletePhotoFromLocalStorage(phoneImageIdToDelete);
+                console.log(`🗑️ Photo ${phoneImageIdToDelete} deleted from local storage (Upload Now)`);
+                
+                // Update the stored images count
+                await checkForStoredImages();
+                
+                showSuccessMessage('📸 Photo uploaded and removed from storage!');
                 hidePhotoReview();
                 
                 // Restore original callbacks
@@ -4050,8 +4276,8 @@ async function uploadNow() {
                 window.uploadOnError = originalOnError;
                 
             } catch (error) {
-                console.error('Error updating photo status:', error);
-                showSuccessMessage('📸 Photo uploaded (status update failed)');
+                console.error('Error deleting photo after successful upload:', error);
+                showSuccessMessage('📸 Photo uploaded successfully! (cleanup failed)');
                 hidePhotoReview();
             } finally {
                 uploadNowBtn.disabled = false;
@@ -4063,6 +4289,9 @@ async function uploadNow() {
         window.uploadOnError = function(error) {
             console.error('Upload failed:', error);
             showError(`Upload failed: ${error}`);
+            
+            // Don't delete photo on failure - keep it for retry
+            console.log(`📷 Photo ${phoneImageIdToDelete} kept in storage due to upload failure`);
             
             // Restore original callbacks
             window.uploadOnSuccess = originalOnSuccess;
@@ -4079,16 +4308,15 @@ async function uploadNow() {
     } catch (error) {
         console.error('Upload preparation failed:', error);
         
-       
+        // Fallback to uploadLater if preparation fails
+        console.log('Falling back to Upload Later due to preparation error');
         await uploadLater();
-       
         
         uploadNowBtn.disabled = false;
         uploadLaterBtn.disabled = false;
         uploadNowBtn.textContent = 'Upload Now';
     }
 }
-
 
 
 // Helper function to convert blob to array buffer
@@ -4931,6 +5159,63 @@ function clearFooterMessages() {
     if (error) error.remove();
     if (progress) progress.remove();
 }
+
+async function startPhotoUploadProcess() {
+    if (isUploadingPhotos) {
+        console.log('Photo upload already in progress, skipping...');
+        return;
+    }
+    
+    try {
+        // Get all stored photos using your existing function
+        const allPhotos = await getAllStoredPhotos();
+        
+        if (allPhotos.length === 0) {
+            console.log('No photos found to upload');
+            return;
+        }
+        
+        console.log(`Starting background upload of ${allPhotos.length} photos...`);
+        isUploadingPhotos = true;
+        activityTimer.setUploading(true);
+        
+        // Process photos one by one with delay
+        for (let i = 0; i < allPhotos.length; i++) {
+            const photo = allPhotos[i];
+            
+            try {
+                console.log(`Uploading photo ${i + 1}/${allPhotos.length}: ${photo.phoneImageId}`);
+                
+                // Use your existing completePhotoUpload function
+                await completePhotoUpload(photo.phoneImageId);
+                
+                console.log(`✅ Photo ${photo.phoneImageId} uploaded successfully`);
+                
+                // Wait between uploads if not the last photo
+                if (i < allPhotos.length - 1) {
+                    console.log(`Waiting ${activityTimer.uploadInterval / 1000} seconds before next upload...`);
+                    await new Promise(resolve => setTimeout(resolve, activityTimer.uploadInterval));
+                }
+                
+            } catch (error) {
+                console.error(`❌ Failed to upload photo ${photo.phoneImageId}:`, error);
+                // Continue with next photo instead of stopping the whole process
+            }
+        }
+        
+        console.log('✅ Background photo upload process completed');
+        
+    } catch (error) {
+        console.error('❌ Error in photo upload process:', error);
+    } finally {
+        isUploadingPhotos = false;
+        activityTimer.setUploading(false);
+    }
+}
+
+
+
+
 // Simple IndexedDB-Only Photo Storage (iPhone Optimized)
 class IndexedDBPhotoStorage {
     constructor() {

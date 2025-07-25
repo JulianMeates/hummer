@@ -1376,10 +1376,14 @@ function PopulatePanels (pResponse){
           }
 
       const regex = /scrolltome="([^"]+)"/i;
-       match = lSectionHtml.match(regex);
-       if (match){
+      match = lSectionHtml.match(regex);
+      if (match){
         console.log(match[1]);
-         }
+      }
+      if (!lSectionHtml.includes ( '<div class="camera-container">')){
+          stopCamera();
+      }
+
     } else if (lHaveAction) {
         var element = document.getElementById("A_Options");
         element.innerHTML = "&nbsp;";
@@ -3481,6 +3485,9 @@ async function capturePhoto() {
             quality: imageQualitySettings.quality,
             mimeType: imageQualitySettings.mimeType,
             clientId: getClientId(),
+            completedChunks: [],
+            fileHandle: null, 
+            numberOfChunks: null, 
             status: 'captured',
             serverUniqueId: null,
             compressionInfo: {
@@ -3567,7 +3574,7 @@ async function compressForIOS(file, maxSize = 500000) {
 async function uploadLater() {
     const capturedPhoto = document.getElementById('capturedPhoto');
     showProcessingOverlay('Saving Photo...');
-    stopCamera();
+    
     if (!capturedPhoto.phoneImageId) return;
     
     try {
@@ -3631,7 +3638,7 @@ async function uploadImageToServer(phoneImageId) {
         const fileToUpload = photoData.imageBlob;
         
         console.log(`Starting upload: ${numberOfChunks} chunks for ${fileToUpload.size} bytes`);
-        console.log(`Previously completed chunks: [${completededChunks.join(', ')}]`);
+        console.log(`Previously completed chunks: [${completedChunks.join(', ')}]`);
         
         // Determine which chunks still need to be uploaded
         const remainingChunks = [];
@@ -4220,7 +4227,7 @@ async function completePhotoUpload(phoneImageId) {
 
 async function uploadNow() {
     showProcessingOverlay('Uploading Photo to Server...');
-    stopCamera();
+   
     const capturedPhoto = document.getElementById('capturedPhoto');
     if (!capturedPhoto.phoneImageId) return;
 

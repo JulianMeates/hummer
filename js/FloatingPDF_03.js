@@ -42,6 +42,10 @@ class FloatingPDFManager {
     // Enhanced functionality properties
     this.orientationCleanup = null;
     this.desktopZoomLevel = 1;
+
+    this.currentRenderTask = null;
+    this.isRendering = false;
+    this.pendingPageNumber = null;
   }
 
   // Convert base64 to blob
@@ -60,19 +64,36 @@ class FloatingPDFManager {
 
   // Cache PDF using OPFS
   async cachePDFFromBase64(base64Data, fileName) {
-    try {
-      const pdfBlob = this.base64ToBlob(base64Data);
-      const opfsRoot = await navigator.storage.getDirectory();
-      const fileHandle = await opfsRoot.getFileHandle(fileName, { create: true });
-      const writable = await fileHandle.createWritable();
-      await writable.write(pdfBlob);
-      await writable.close();
-      return fileName;
-    } catch (error) {
-      console.error('Error caching PDF:', error);
+  try {
+    const pdfBlob = this.base64ToBlob(base64Data);
+    
+    // Skip if file is too large (>25MB)
+    if (pdfBlob.size > 25 * 1024 * 1024) {
+      console.log('PDF too large for caching');
       return null;
     }
+    
+    // Check available storage
+    const estimate = await navigator.storage.estimate();
+    const availableMB = (estimate.quota - estimate.usage) / (1024 * 1024);
+    
+    if (availableMB < 50) { // Need at least 50MB free
+      console.log('Insufficient storage space');
+      return null;
+    }
+    
+    const opfsRoot = await navigator.storage.getDirectory();
+    const fileHandle = await opfsRoot.getFileHandle(fileName, { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(pdfBlob);
+    await writable.close();
+    return fileName;
+    
+  } catch (error) {
+    console.log('PDF caching failed (non-critical):', error.message);
+    return null;
   }
+}
 
   // Get cached PDF
   async getCachedPDF(fileName) {
@@ -148,12 +169,12 @@ createFloatingContainer() {
   buttonContainer.id = 'pdf-floating-buttons';
   buttonContainer.style.cssText = `
     position: absolute;
-    bottom: 15px;
+    bottom: 60px;
     left: 15px;
     display: flex;
     gap: 8px;
-    z-index: 1001;
-    opacity: 0;
+    z-index: 10001;
+    opacity: 1;
     transition: opacity 0.3s ease;
     pointer-events: auto;
   `;
@@ -225,31 +246,7 @@ createFloatingContainer() {
   buttonContainer.appendChild(minimizeButton);
   buttonContainer.appendChild(closeButton);
 
-  // Show/hide buttons on hover
-  let hideTimeout;
-  const showButtons = () => {
-    clearTimeout(hideTimeout);
-    buttonContainer.style.opacity = '1';
-  };
-  
-  const hideButtons = () => {
-    hideTimeout = setTimeout(() => {
-      buttonContainer.style.opacity = '0';
-    }, 2000); // Hide after 2 seconds
-  };
 
-  // Show buttons on container hover/touch
-  container.addEventListener('mouseenter', showButtons);
-  container.addEventListener('mousemove', showButtons);
-  container.addEventListener('touchstart', showButtons);
-  container.addEventListener('mouseleave', hideButtons);
-
-  // Keep buttons visible when hovering over them
-  buttonContainer.addEventListener('mouseenter', () => {
-    clearTimeout(hideTimeout);
-    buttonContainer.style.opacity = '1';
-  });
-  buttonContainer.addEventListener('mouseleave', hideButtons);
 
   // Add drag functionality to the entire container
   this.setupDragFunctionality(container, container);
@@ -271,26 +268,99 @@ createFloatingContainer() {
   document.body.appendChild(overlay);
   this.floatingContainer = overlay;
 
-  // Show buttons initially then fade them
   setTimeout(() => {
     overlay.style.opacity = '1';
     container.style.transform = 'translate(-50%, -50%) scale(1)';
-    showButtons();
-    hideButtons(); // Start the auto-hide timer
+    // Buttons are already visible, no need to show/hide
   }, 10);
 
   return contentArea;
 }
 
-  // Setup drag functionality
   setupDragFunctionality(dragElement, container) {
   dragElement.addEventListener('mousedown', (e) => {
-    // Don't drag if clicking on buttons or PDF content
-    if (e.target.tagName === 'BUTTON' || 
-        e.target.tagName === 'CANVAS' ||
-        e.target.closest('#pdf-content-area')) {
+    // Get the click position relative to container
+    const containerRect = container.getBoundingClientRect();
+    const clickX = e.clientX - containerRect.left;
+    const clickY = e.clientY - containerRect.top;
+    
+    // ENHANCED: Don't drag if clicking on specific elements or areas
+    const preventDragElements = [
+      'BUTTON',
+      'CANVAS', 
+      'IFRAME',
+      'INPUT',
+      'SELECT',
+      'TEXTAREA'
+    ];
+    
+    const preventDragSelectors = [
+      '#pdf-content-area',
+      '#pdf-canvas-container',
+      '#pdf-scroll-wrapper',
+      'iframe',
+      '.file-input-label',
+      '.upload-container',
+      '[style*="background: rgba(0, 123, 255"]', // PDF controls with blue background
+      '[style*="padding: 8px 12px"]' // Header controls
+    ];
+    
+    // Check if clicking on prevented elements
+    if (preventDragElements.includes(e.target.tagName)) {
+      console.log('Drag prevented: clicked on', e.target.tagName);
       return;
     }
+    
+    // Check if clicking on prevented selectors
+    for (const selector of preventDragSelectors) {
+      if (e.target.closest(selector)) {
+        console.log('Drag prevented: clicked in', selector);
+        return;
+      }
+    }
+    
+    const clickedElement = e.target;
+    const isHeaderElement = (
+      clickedElement.closest('[style*="background: rgba(0, 123, 255"]') ||
+      clickedElement.closest('[style*="padding: 8px 12px"]') ||
+      clickedElement.closest('button') ||
+      clickY < 80 // Increased from 60px to be more conservative
+    );
+    
+    if (isHeaderElement) {
+      console.log('Drag prevented: clicked on header or controls');
+      return;
+    }
+    
+    // SPECIFIC: Don't drag from the main content area (where PDF/iframe is)
+    const contentArea = container.querySelector('#pdf-content-area');
+    if (contentArea) {
+      const contentRect = contentArea.getBoundingClientRect();
+      const isInContentArea = (
+        e.clientX >= contentRect.left &&
+        e.clientX <= contentRect.right &&
+        e.clientY >= contentRect.top &&
+        e.clientY <= contentRect.bottom
+      );
+      
+      if (isInContentArea) {
+        console.log('Drag prevented: clicked in content area');
+        return;
+      }
+    }
+    
+    const isInDragZone = (
+      (clickX < 15 && clickY > 100) ||  // Left edge, below header
+      (clickX > containerRect.width - 15 && clickY > 100) || // Right edge, below header
+      (clickY > containerRect.height - 15) // Bottom edge only
+    );
+    
+    if (!isInDragZone) {
+      console.log('Drag prevented: not in drag zone');
+      return;
+    }
+    
+    console.log('Drag started from valid zone');
     
     this.isDragging = true;
     this.dragStartX = e.clientX;
@@ -324,7 +394,8 @@ createFloatingContainer() {
     if (this.isDragging) {
       this.isDragging = false;
       document.body.style.cursor = '';
-      dragElement.style.cursor = 'move';
+      dragElement.style.cursor = '';
+      console.log('Drag ended');
     }
   });
 
@@ -332,6 +403,7 @@ createFloatingContainer() {
     if (container) this.keepContainerInBounds(container);
   });
 }
+
   // Keep container within viewport bounds
   keepContainerInBounds(container) {
     const rect = container.getBoundingClientRect();
@@ -353,26 +425,34 @@ createFloatingContainer() {
     container.style.top = `${newY}px`;
   }
 
-  // Enhanced close with cleanup
   closeFloatingPDF() {
-    if (this.orientationCleanup) {
-      this.orientationCleanup();
-      this.orientationCleanup = null;
-    }
-    
-    if (this.floatingContainer) {
-      const overlay = this.floatingContainer;
-      const container = overlay.querySelector('.pdf-floating-container');
-      
-      overlay.style.opacity = '0';
-      container.style.transform = 'translate(-50%, -50%) scale(0.8)';
-      
-      setTimeout(() => {
-        overlay.remove();
-        this.floatingContainer = null;
-      }, 300);
-    }
+  // Cancel any ongoing render operation
+  if (this.currentRenderTask) {
+    this.currentRenderTask.cancel();
+    this.currentRenderTask = null;
   }
+  
+  this.isRendering = false;
+  this.pendingPageNumber = null;
+  
+  if (this.orientationCleanup) {
+    this.orientationCleanup();
+    this.orientationCleanup = null;
+  }
+  
+  if (this.floatingContainer) {
+    const overlay = this.floatingContainer;
+    const container = overlay.querySelector('.pdf-floating-container');
+    
+    overlay.style.opacity = '0';
+    container.style.transform = 'translate(-50%, -50%) scale(0.8)';
+    
+    setTimeout(() => {
+      overlay.remove();
+      this.floatingContainer = null;
+    }, 300);
+  }
+}
 
   // Minimize PDF viewer
   minimizeFloatingPDF() {
@@ -800,8 +880,8 @@ createDesktopControls(totalPages) {
     border-radius: 4px;
     cursor: pointer;
     font-size: 14px;
-    min-width: 32px;
-    min-height: 32px;
+    min-width: 36px;
+    min-height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1004,12 +1084,11 @@ setupTouchInteractions(container, canvas, scrollWrapper) {
       // 4. Significant horizontal distance (> 80px)
       // 5. Not much vertical movement
       // 6. Haven't moved significantly overall (not a pan)
-      if (currentScale < 1.3 && 
-          absDeltaX > 80 && 
-          absDeltaX > absDeltaY * 1.5 && 
-          touchDuration < 500 &&
-          absDeltaY < 50 &&
-          !hasMovedSignificantly) {
+      if (currentScale < 1.5 && 
+        absDeltaX > 50 && 
+        absDeltaX > absDeltaY * 1.2 && 
+        touchDuration < 700 &&
+        absDeltaY < 80) {
         
         if (deltaX > 0) {
           // Swipe right - previous page
@@ -1120,14 +1199,30 @@ setupTouchInteractions(container, canvas, scrollWrapper) {
     }
   }
 
-  async renderMobilePage(pageNum) {
+ async renderMobilePage(pageNum) {
   if (!this.currentPDF || !this.currentCanvas) return;
+  
+  // Cancel any ongoing render operation
+  if (this.currentRenderTask) {
+    this.currentRenderTask.cancel();
+    this.currentRenderTask = null;
+  }
+  
+  if (this.isRendering) {
+    this.pendingPageNumber = pageNum;
+    return;
+  }
+  
+  this.isRendering = true;
   
   try {
     const page = await this.currentPDF.getPage(pageNum);
     
     const container = document.getElementById('pdf-canvas-container');
-    if (!container) return;
+    if (!container) {
+      this.isRendering = false;
+      return;
+    }
     
     const devicePixelRatio = window.devicePixelRatio || 1;
     const backingStoreRatio = this.currentContext.webkitBackingStorePixelRatio ||
@@ -1138,15 +1233,18 @@ setupTouchInteractions(container, canvas, scrollWrapper) {
     
     const pixelRatio = devicePixelRatio / backingStoreRatio;
     
-    const containerWidth = container.clientWidth - 20;
-    const containerHeight = container.clientHeight - 20;
+    // FIXED: Better container size calculation with more padding
+    const containerWidth = container.clientWidth - 40; // Increased padding
+    const containerHeight = container.clientHeight - 40; // Increased padding
     const viewport = page.getViewport({ scale: 1 });
     
+    // FIXED: More conservative scaling to ensure it fits
     const scaleX = containerWidth / viewport.width;
     const scaleY = containerHeight / viewport.height;
-    let baseScale = Math.min(scaleX, scaleY);
+    let baseScale = Math.min(scaleX, scaleY) * 0.9; // Add 10% margin
     
-    const qualityMultiplier = Math.min(2.5, Math.max(1.5, pixelRatio));
+    // FIXED: Reduce quality multiplier to prevent over-zooming
+    const qualityMultiplier = Math.min(1.8, Math.max(1.2, pixelRatio)); // Reduced from 2.5/1.5
     const finalScale = baseScale * qualityMultiplier;
     
     const scaledViewport = page.getViewport({ scale: finalScale });
@@ -1154,8 +1252,12 @@ setupTouchInteractions(container, canvas, scrollWrapper) {
     this.currentCanvas.width = scaledViewport.width * pixelRatio;
     this.currentCanvas.height = scaledViewport.height * pixelRatio;
     
-    this.currentCanvas.style.width = scaledViewport.width + 'px';
-    this.currentCanvas.style.height = scaledViewport.height + 'px';
+    // FIXED: Set display size to fit container better
+    const displayWidth = Math.min(scaledViewport.width, containerWidth);
+    const displayHeight = Math.min(scaledViewport.height, containerHeight);
+    
+    this.currentCanvas.style.width = displayWidth + 'px';
+    this.currentCanvas.style.height = displayHeight + 'px';
     
     this.currentContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     
@@ -1177,81 +1279,132 @@ setupTouchInteractions(container, canvas, scrollWrapper) {
       optionalContentConfigPromise: null
     };
     
-    await page.render(renderContext).promise;
+    this.currentRenderTask = page.render(renderContext);
+    await this.currentRenderTask.promise;
+    this.currentRenderTask = null;
     
     const pageInfoElement = document.getElementById('mobile-page-info');
     if (pageInfoElement) {
       pageInfoElement.textContent = `${pageNum} / ${this.currentPDF.numPages}`;
     }
     
-    console.log(`Rendered page ${pageNum} with scale: ${finalScale.toFixed(2)}, pixel ratio: ${pixelRatio}`);
+    console.log(`Rendered page ${pageNum} - Base scale: ${baseScale.toFixed(2)}, Final scale: ${finalScale.toFixed(2)}, Display: ${displayWidth}x${displayHeight}`);
     
   } catch (error) {
-    console.error('Error rendering mobile page:', error);
+    if (error.name !== 'RenderingCancelledException') {
+      console.error('Error rendering mobile page:', error);
+    }
+  } finally {
+    this.isRendering = false;
+    this.currentRenderTask = null;
+    
+    if (this.pendingPageNumber !== null && this.pendingPageNumber !== pageNum) {
+      const nextPage = this.pendingPageNumber;
+      this.pendingPageNumber = null;
+      setTimeout(() => this.renderMobilePage(nextPage), 50);
+    }
   }
 }
 
-  // Desktop page rendering with quality optimization
-  async renderDesktopPage(pageNum) {
-    if (!this.currentPDF || !this.currentCanvas) return;
+ async renderDesktopPage(pageNum) {
+  if (!this.currentPDF || !this.currentCanvas) return;
+  
+  // Cancel any ongoing render operation
+  if (this.currentRenderTask) {
+    this.currentRenderTask.cancel();
+    this.currentRenderTask = null;
+  }
+  
+  // If already rendering, queue this page number
+  if (this.isRendering) {
+    this.pendingPageNumber = pageNum;
+    return;
+  }
+  
+  this.isRendering = true;
+  
+  try {
+    const page = await this.currentPDF.getPage(pageNum);
     
-    try {
-      const page = await this.currentPDF.getPage(pageNum);
-      
-      const devicePixelRatio = window.devicePixelRatio || 1;
-      const container = document.getElementById('pdf-canvas-container');
-      const containerWidth = container.clientWidth - 40;
-      
-      const viewport = page.getViewport({ scale: 1 });
-      const scale = Math.min((containerWidth / viewport.width), 2) * (this.desktopZoomLevel || 1);
-      const qualityScale = scale * Math.min(devicePixelRatio, 2);
-      
-      const scaledViewport = page.getViewport({ scale: qualityScale });
-      
-      this.currentCanvas.width = scaledViewport.width;
-      this.currentCanvas.height = scaledViewport.height;
-      this.currentCanvas.style.width = (scaledViewport.width / devicePixelRatio) + 'px';
-      this.currentCanvas.style.height = (scaledViewport.height / devicePixelRatio) + 'px';
-      
-      this.currentContext.imageSmoothingEnabled = true;
-      this.currentContext.imageSmoothingQuality = 'high';
-      
-      await page.render({
-        canvasContext: this.currentContext,
-        viewport: scaledViewport,
-        intent: 'display'
-      }).promise;
-      
-      const pageInfoElement = document.getElementById('desktop-page-info');
-      if (pageInfoElement) {
-        pageInfoElement.textContent = `Page ${pageNum} of ${this.currentPDF.numPages}`;
-      }
-      
-    } catch (error) {
+    const devicePixelRatio = window.devicePixelRatio || 1;
+    const container = document.getElementById('pdf-canvas-container');
+    const containerWidth = container.clientWidth - 40;
+    
+    const viewport = page.getViewport({ scale: 1 });
+    const scale = Math.min((containerWidth / viewport.width), 2) * (this.desktopZoomLevel || 1);
+    const qualityScale = scale * Math.min(devicePixelRatio, 2);
+    
+    const scaledViewport = page.getViewport({ scale: qualityScale });
+    
+    this.currentCanvas.width = scaledViewport.width;
+    this.currentCanvas.height = scaledViewport.height;
+    this.currentCanvas.style.width = (scaledViewport.width / devicePixelRatio) + 'px';
+    this.currentCanvas.style.height = (scaledViewport.height / devicePixelRatio) + 'px';
+    
+    this.currentContext.imageSmoothingEnabled = true;
+    this.currentContext.imageSmoothingQuality = 'high';
+    
+    const renderContext = {
+      canvasContext: this.currentContext,
+      viewport: scaledViewport,
+      intent: 'display'
+    };
+    
+    // Store the render task so we can cancel it if needed
+    this.currentRenderTask = page.render(renderContext);
+    await this.currentRenderTask.promise;
+    this.currentRenderTask = null;
+    
+    const pageInfoElement = document.getElementById('desktop-page-info');
+    if (pageInfoElement) {
+      pageInfoElement.textContent = `Page ${pageNum} of ${this.currentPDF.numPages}`;
+    }
+    
+  } catch (error) {
+    if (error.name !== 'RenderingCancelledException') {
       console.error('Error rendering desktop page:', error);
     }
-  }
-
-  // Navigate to specific page (mobile)
-  async goToMobilePage(pageNum) {
-    if (!this.currentPDF || pageNum < 1 || pageNum > this.currentPDF.numPages) {
-      return;
-    }
+  } finally {
+    this.isRendering = false;
+    this.currentRenderTask = null;
     
-    this.currentPage = pageNum;
-    await this.renderMobilePage(pageNum);
-  }
-
-  // Navigate to specific page (desktop)
-  async goToDesktopPage(pageNum) {
-    if (!this.currentPDF || pageNum < 1 || pageNum > this.currentPDF.numPages) {
-      return;
+    // If there's a pending page request, process it
+    if (this.pendingPageNumber !== null && this.pendingPageNumber !== pageNum) {
+      const nextPage = this.pendingPageNumber;
+      this.pendingPageNumber = null;
+      setTimeout(() => this.renderDesktopPage(nextPage), 50);
     }
-    
-    this.currentPage = pageNum;
-    await this.renderDesktopPage(pageNum);
   }
+}
 
+ async goToMobilePage(pageNum) {
+  if (!this.currentPDF || pageNum < 1 || pageNum > this.currentPDF.numPages) {
+    return;
+  }
+  
+  // Don't change page if we're already on it
+  if (pageNum === this.currentPage) {
+    return;
+  }
+  
+  this.currentPage = pageNum;
+  await this.renderMobilePage(pageNum);
+}
+
+// UPDATE your goToDesktopPage method similarly:
+async goToDesktopPage(pageNum) {
+  if (!this.currentPDF || pageNum < 1 || pageNum > this.currentPDF.numPages) {
+    return;
+  }
+  
+  // Don't change page if we're already on it
+  if (pageNum === this.currentPage) {
+    return;
+  }
+  
+  this.currentPage = pageNum;
+  await this.renderDesktopPage(pageNum);
+}
   // Desktop zoom functionality
   adjustDesktopZoom(factor) {
     this.desktopZoomLevel = (this.desktopZoomLevel || 1) * factor;
