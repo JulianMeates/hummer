@@ -4,7 +4,7 @@
   "main": "cecc.js",
    "scripts": {
     "ionic:build": "npm run build",
-  "build": "echo 'Copying files...' && xcopy /E /I /Y css www\\css\\ && xcopy /E /I /Y js www\\js\\ && xcopy /E /I /Y Images www\\Images\\ && copy /Y index.html www\\"
+     "build": "cpx 'css/**/*' www/css && cpx 'js/**/*' www/js && cpx 'Images/**/*' www/Images && cpx index.html www/"
     },
   "keywords": [],
   "author": "",
