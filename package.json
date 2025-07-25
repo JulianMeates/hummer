@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "main": "cecc.js",
    "scripts": {
-    "ionic:build": "npm run build",
-     "build": "cpx 'css/**/*' www/css && cpx 'js/**/*' www/js && cpx 'Images/**/*' www/Images && cpx index.html www/"
-    },
+   "ionic:build": "echo 'Files ready for Capacitor'"
+       },
   "keywords": [],
   "author": "",
   "license": "ISC",
