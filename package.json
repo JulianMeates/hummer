@@ -2,9 +2,9 @@
   "name": "hummer",
   "version": "1.0.0",
   "main": "cecc.js",
-   "scripts": {
-   "ionic:build": "echo 'Files ready for Capacitor'"
-       },
+  "scripts": {
+    "ionic:build": "echo 'Files ready for Capacitor'"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -13,5 +13,8 @@
     "@capacitor/cli": "^7.4.2",
     "@capacitor/core": "^7.4.2",
     "@capacitor/ios": "^7.4.2"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5"
   }
 }
