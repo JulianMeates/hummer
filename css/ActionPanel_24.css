@@ -478,7 +478,7 @@ input[type="submit"]:focus {
     border-bottom: 1px solid #e9ecef;
     cursor: pointer;
     transition: background-color 0.2s;
-    min-height: 48px; /* ADD: minimum touch target */
+   
     background: white;
     border-radius: 5px;
     margin-bottom: 4px;
@@ -551,8 +551,29 @@ input[type="submit"]:focus {
   border: none;
 }
 .Option_Indent {
-  width: 95%;
-  margin-left: 5%;
+    /* Keep the existing indentation */
+    width: 95%;
+    margin-left: 5%;
+    
+    /* Add all the Option styling to make images act like options */
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Center the image horizontally */
+    padding: 12px 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+   
+    background: white;
+    border-radius: 5px;
+    margin-bottom: 4px;
+    border: 1px solid var(--color-cool-grey-300);
+}
+
+.Option_Indent img {
+    max-width: 70%;
+    height: auto;
+    pointer-events: none; /* Allow clicks to pass through to the parent div */
+    display: block;
 }
 
 .Option_Label {

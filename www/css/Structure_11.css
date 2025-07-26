@@ -594,7 +594,7 @@ main {
     
     /* ADD: Ensure proper touch targets on mobile */
     .Option, .Option_End {
-        min-height: 52px;
+       
         padding: 15px 10px;
     }
 }
